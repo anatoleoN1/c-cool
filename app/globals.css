@@ -1,26 +1,87 @@
-@import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+.page-title {
+  margin: 10px 0;
+  font-size: clamp(32px, 5vw, 48px);
+  letter-spacing: -0.045em;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.page-description {
+  max-width: 650px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1.6;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+.todo-subject {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.todo-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgb(0 0 0 / 25%);
+}
+
+.mobile-drawer {
+  width: min(300px, 85vw);
+  height: 100%;
+  padding: 24px 16px;
+  background: var(--surface);
+  box-shadow: 10px 0 30px rgb(0 0 0 / 10%);
+  animation: drawer-in 0.18s ease-out;
+}
+
+.mobile-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 35px;
+}
+
+.mobile-drawer .brand {
+  margin: 0;
+}
+
+.mobile-close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  cursor: pointer;
+  font-size: 25px;
+  line-height: 1;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (max-width: 900px) {
+  .topbar {
+    display: flex;
+  }
+
+  .topbar-title {
+    flex: 1;
+    margin-left: 14px;
+  }
 }
