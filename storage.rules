@@ -1,0 +1,20 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function signedIn() { return request.auth != null; }
+    function role() { return signedIn() ? request.auth.token.role : null; }
+    function isAdmin() { return role() == 'admin'; }
+    function isMember(schoolId) {
+      return signedIn() && firestore.exists(/databases/(default)/documents/schools/$(schoolId)/members/$(request.auth.uid));
+    }
+    match /schools/{schoolId}/official/{allPaths=**} {
+      allow read: if isMember(schoolId);
+      allow write: if isAdmin();
+    }
+    match /schools/{schoolId}/contributions/{userId}/{allPaths=**} {
+      allow read: if isMember(schoolId) && (request.auth.uid == userId || isAdmin());
+      allow create: if isMember(schoolId) && request.auth.uid == userId && request.resource.size < 10 * 1024 * 1024;
+      allow update, delete: if false;
+    }
+  }
+}

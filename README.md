@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# C-Cool
 
-## Getting Started
+Plateforme éducative collaborative, construite avec Next.js, TypeScript et Firebase. Le socle actuel fournit l’authentification e-mail, les rôles, les règles de sécurité, les repositories Firestore et des algorithmes métier testés.
 
-First, run the development server:
+## Prérequis
+
+- Node.js 20 LTS (adapté au Raspberry Pi 5) et npm ;
+- un projet Firebase ;
+- Firebase CLI, installée par les dépendances de développement ou globalement.
+
+## Installation et développement
 
 ```bash
+cp .env.example .env.local
+cp .firebaserc.example .firebaserc
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Renseignez dans `.env.local` les valeurs Web de Firebase. Les variables `NEXT_PUBLIC_FIREBASE_*` identifient publiquement une application Web Firebase : elles ne sont pas des secrets. Les clés Firebase Admin sont exclusivement serveur, sans préfixe `NEXT_PUBLIC_`, et ne doivent jamais être commitées.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+La page `/connexion` permet l’inscription et la connexion e-mail/mot de passe une fois Firebase Authentication activé.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Émulateurs Firebase
 
-## Learn More
+Dans `.env.local`, réglez `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true`, puis lancez :
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npx firebase emulators:start
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+L’interface Emulator est disponible sur `http://127.0.0.1:4000`. Activez Email/Password dans l’émulateur ou créez un utilisateur depuis C-Cool. Les ports sont définis dans `firebase.json`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Vérification
 
-## Deploy on Vercel
+```bash
+npm run lint
+npm test
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Architecture
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `app/` : routes Next.js App Router ;
+- `components/auth` : contexte et formulaire d’authentification ;
+- `components/layout` : navigation et enveloppe de l’application ;
+- `lib/firebase` : SDK client, SDK Admin serveur et rôles ;
+- `lib/repositories` : accès Firestore isolé des composants React ;
+- `lib/domain` : règles métier pures ;
+- `lib/algorithms` : similarité, répétition espacée, progression et plans de révision ;
+- `lib/ed` : contrat d’adaptateur École Directe, sans implémentation ni identifiant ;
+- `types/` : modèle de domaine ;
+- `functions/` : Cloud Functions TypeScript, notamment attribution sécurisée des rôles.
+
+Les données École Directe futures seront limitées au backend et séparées dans `edRaw`; aucune donnée d’identification École Directe ne doit être mise dans le client, Firestore en clair ou les journaux.
+
+## Sécurité et rôles
+
+Les rôles sont `student`, `moderator` et `admin`. Ils sont prévus dans le profil Firestore et les Firebase custom claims. La Cloud Function `setUserRole` est accessible uniquement à un administrateur.
+
+Les règles de `firestore.rules` imposent notamment :
+
+- un élève modifie son profil et ses données personnelles uniquement ;
+- un élève crée seulement des contributions `pending` ;
+- les données officielles ne sont écrites que par un administrateur ;
+- les modérateurs accèdent à la file de modération ;
+- les données brutes École Directe sont entièrement inaccessibles depuis le client.
+
+Les SDK Admin et Cloud Functions contournent les Security Rules : chaque fonction doit donc vérifier explicitement l’identité et le rôle de son appelant.
+
+## Déploiement Firebase
+
+1. Créez/configurez le projet Firebase et copiez son identifiant dans `.firebaserc`.
+2. Activez Authentication avec le fournisseur Email/Password.
+3. Créez Firestore et Firebase Storage dans la même région.
+4. Installez les dépendances des fonctions : `cd functions && npm install`.
+5. Vérifiez le projet, puis déployez :
+
+```bash
+npx firebase deploy --only firestore:rules,firestore:indexes,storage,functions
+```
+
+Le déploiement du front Next.js sur Firebase App Hosting doit être configuré dans la console Firebase ; ne déployez jamais un fichier `.env.local` ni une clé de compte de service.

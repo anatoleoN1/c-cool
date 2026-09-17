@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function role() { return signedIn() ? request.auth.token.role : null; }
+    function isAdmin() { return role() == 'admin'; }
+    function isModerator() { return role() == 'moderator' || isAdmin(); }
+    function isMember(schoolId) {
+      return signedIn() && exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid));
+    }
+    function unchangedRole() { return request.resource.data.role == resource.data.role; }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role == 'student'
+        && request.resource.data.activeSchoolIds.size() == 0;
+      allow update: if signedIn() && request.auth.uid == userId
+        && unchangedRole()
+        && request.resource.data.activeSchoolIds == resource.data.activeSchoolIds;
+      allow delete: if false;
+
+      match /progress/{progressId} {
+        allow read, write: if signedIn() && request.auth.uid == userId;
+      }
+      match /revisionPlans/{planId} {
+        allow read: if signedIn() && request.auth.uid == userId;
+        allow write: if false;
+      }
+      match /mentalMathAttempts/{attemptId} {
+        allow read, create: if signedIn() && request.auth.uid == userId;
+        allow update, delete: if false;
+      }
+    }
+
+    match /schools/{schoolId} {
+      allow read: if isMember(schoolId);
+      allow create, update, delete: if isAdmin();
+
+      match /members/{memberId} {
+        allow read: if isMember(schoolId);
+        allow create, update, delete: if isAdmin();
+      }
+
+      match /{officialCollection}/{documentId} {
+        allow read: if isMember(schoolId) && resource.data.published == true;
+        allow create, update, delete: if isAdmin()
+          && officialCollection in ['subjects', 'chapters', 'officialCourses', 'officialHomework', 'officialAssessments', 'officialExercises', 'officialCorrections', 'officialResources', 'officialSchedule'];
+      }
+
+      match /contributions/{contributionId} {
+        allow read: if isMember(schoolId) && (resource.data.authorId == request.auth.uid || isModerator());
+        allow create: if isMember(schoolId)
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.status == 'pending';
+        allow update: if isModerator() || (
+          resource.data.authorId == request.auth.uid
+          && resource.data.status == 'pending'
+          && request.resource.data.status == 'pending'
+          && request.resource.data.authorId == resource.data.authorId
+        );
+        allow delete: if isAdmin();
+      }
+
+      match /contributionClusters/{clusterId} {
+        allow read: if isModerator();
+        allow write: if false;
+      }
+      match /moderationQueue/{itemId} {
+        allow read, update: if isModerator();
+        allow create, delete: if false;
+      }
+      match /edRaw/{document=**} {
+        allow read, write: if false;
+      }
+    }
+  }
+}
