@@ -65,7 +65,6 @@ export async function signIn(identifiant: string, motdepasse: string): Promise<E
       kind: "qcm",
       identifiant,
       motdepasse,
-      pendingToken: data.pendingToken,
       question: data.question,
       propositions: data.propositions,
     };
@@ -80,13 +79,12 @@ export async function signIn(identifiant: string, motdepasse: string): Promise<E
 export async function completeEcoleDirecteQcm(
   identifiant: string,
   motdepasse: string,
-  pendingToken: string,
   choice: string,
 ): Promise<FirebaseUser> {
   const response = await fetch("/api/ecoledirecte/qcm", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ identifiant, motdepasse, pendingToken, choice }),
+    body: JSON.stringify({ identifiant, motdepasse, choice }),
   });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "Le QCM EcoleDirecte a été refusé.");
