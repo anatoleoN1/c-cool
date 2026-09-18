@@ -9,7 +9,7 @@ export default function AuthForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
   const [identifiant, setIdentifiant] = useState("");
   const [motdepasse, setMotdepasse] = useState("");
-  const [qcm, setQcm] = useState<{ pendingToken: string; question: string; propositions: string[] } | null>(null);
+  const [qcm, setQcm] = useState<{ pendingToken: string; question: string; propositions: Array<{ encoded: string; label: string }> } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -55,7 +55,7 @@ export default function AuthForm({ nextPath }: { nextPath: string }) {
           <p><strong>{qcm.question}</strong></p>
           <div className="qcm-options">
             {qcm.propositions.map((choice) => (
-              <button key={choice} type="button" className="auth-submit" disabled={pending} onClick={() => void submitQcm(choice)}>
+              <button key={choice} type="button" className="auth-submit" disabled={pending} onClick={() => void submitQcm(choice.encoded)}>
                 {choice}
               </button>
             ))}
