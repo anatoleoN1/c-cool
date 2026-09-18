@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { createEcoleDirecteCustomToken } from "@/lib/firebase/admin";
 import { login } from "@/lib/ecoledirecte/client";
 
 export const runtime = "nodejs";
@@ -37,12 +37,7 @@ export async function POST(request: Request) {
 
     const account = result.account;
     const uid = `ed_${account.codeOgec}_${account.id}`;
-    const customToken = await adminAuth().createCustomToken(uid, {
-      role: "student",
-      schoolId: account.codeOgec,
-      edStudentId: String(account.id),
-      edAccountType: account.typeCompte,
-    });
+    const customToken = await createEcoleDirecteCustomToken(uid, account.codeOgec, String(account.id), account.typeCompte);
     const response = NextResponse.json(responseFor(account, customToken));
     response.cookies.set("c_cool_ed_pending_token", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 600 });
     response.cookies.set("c_cool_ed_student", String(account.id), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
