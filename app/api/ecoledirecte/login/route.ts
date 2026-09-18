@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     const uid = `ed_${account.codeOgec}_${account.id}`;
     const customToken = await createEcoleDirecteCustomToken(uid, account.codeOgec, String(account.id), account.typeCompte);
     const response = NextResponse.json(responseFor(account, customToken));
-    response.cookies.set("c_cool_ed_pending_token", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 600 });
+    response.cookies.set("c_cool_ed_token", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
     response.cookies.set("c_cool_ed_student", String(account.id), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
     response.cookies.set("c_cool_ed_school", account.codeOgec, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
     return response;
