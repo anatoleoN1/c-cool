@@ -10,7 +10,7 @@ const BASE_URL = "https://api.ecoledirecte.com/v3";
 const API_VERSION = process.env.ECOLEDIRECTE_API_VERSION || "7.12.1";
 const USER_AGENT =
   process.env.ECOLEDIRECTE_USER_AGENT ||
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36";
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36";
 
 export class EcoleDirecteError extends Error {
   constructor(
@@ -93,7 +93,7 @@ export async function login(
   if (!gtk) throw new EcoleDirecteError("EcoleDirecte n’a pas fourni le cookie GTK.");
 
   const result = await request<{ accounts: EcoleDirecteAccount[] }>(
-    `/login.awp?isRelogin=0`,
+    `/login.awp`,
     {
       method: "POST",
       gtk,
