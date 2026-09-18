@@ -85,7 +85,7 @@ export async function login(
   motdepasse: string,
 ): Promise<
   | { kind: "success"; token: string; account: EcoleDirecteAccount }
-  | { kind: "qcm"; token: string; question: string; propositions: string[] }
+  | { kind: "qcm"; token: string; question: string; propositions: Array<{ encoded: string; label: string }> }
 > {
   const gtkResponse = await fetch(
     `${BASE_URL}/login.awp?gtk=1&v=${encodeURIComponent(API_VERSION)}`,
@@ -112,7 +112,7 @@ export async function login(
       kind: "qcm",
       token: result.token || "",
       question: decodeBase64(challenge.data.question),
-      propositions: challenge.data.propositions || [],
+      propositions: (challenge.data.propositions || []).map((encoded) => ({ encoded, label: decodeBase64(encoded) })),
     };
   }
 
