@@ -46,4 +46,18 @@ export class HomeworkRepository extends FirestoreRepository<Homework> {
 
 export class AssessmentRepository extends FirestoreRepository<Assessment> {
   constructor(schoolId: string) { super(`schools/${schoolId}/officialAssessments`); }
+
+  listPublished(): Promise<Assessment[]> {
+    return published<Assessment>(this.path).then((items) =>
+      items.sort((a, b) => a.date.localeCompare(b.date)),
+    );
+  }
+}
+
+export class ExerciseRepository extends FirestoreRepository<import("@/types").Exercise> {
+  constructor(schoolId: string) { super(`schools/${schoolId}/officialExercises`); }
+
+  listPublished(): Promise<import("@/types").Exercise[]> {
+    return published<import("@/types").Exercise>(this.path);
+  }
 }
