@@ -35,7 +35,7 @@ export interface MentalMathAttempt extends AuditFields {
   userId: string;
   schoolId: string;
   operation: "addition" | "subtraction" | "multiplication" | "division";
-  format: "direct" | "missing_factor" | "missing_operand" | "inverse_division";
+  format: "direct" | "missing-left" | "missing-right" | "division";
   difficulty: number;
   question: string;
   answer: string;
