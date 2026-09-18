@@ -1,20 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserRepository } from "@/lib/repositories/user-repository";
 
 export default function SettingsPage() {
   const { user, profile } = useAuth();
-  const [notifications, setNotifications] = useState(profile?.preferences?.notifications ?? true);
-  const [compact, setCompact] = useState(profile?.preferences?.compact ?? false);
+  const [notificationsOverride, setNotificationsOverride] = useState<boolean | null>(null);
+  const [compactOverride, setCompactOverride] = useState<boolean | null>(null);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
-    setNotifications(profile?.preferences?.notifications ?? true);
-    setCompact(profile?.preferences?.compact ?? false);
-  }, [profile?.preferences]);
+  const notifications = notificationsOverride ?? profile?.preferences?.notifications ?? true;
+  const compact = compactOverride ?? profile?.preferences?.compact ?? false;
 
   async function save(preferences: { notifications: boolean; compact: boolean }) {
     if (!user) return;
@@ -28,12 +26,12 @@ export default function SettingsPage() {
   }
 
   function changeNotifications(value: boolean) {
-    setNotifications(value);
+    setNotificationsOverride(value);
     void save({ notifications: value, compact });
   }
 
   function changeCompact(value: boolean) {
-    setCompact(value);
+    setCompactOverride(value);
     void save({ notifications, compact: value });
   }
 
