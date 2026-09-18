@@ -104,7 +104,7 @@ export async function login(
   if (result.code === 250) {
     const challenge = await request<{ question: string; propositions: string[] }>(
       "/connexion/doubleauth.awp",
-      { method: "POST", token: result.token, data: {} },
+      { method: "GET", token: result.token },
     );
     return {
       kind: "qcm",
