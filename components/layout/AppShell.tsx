@@ -5,6 +5,7 @@ import MobileMenu from "./MobileMenu";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { trackEvent } from "@/lib/firebase/analytics";
 
 export default function AppShell({
   children,
@@ -14,6 +15,11 @@ export default function AppShell({
   const { user, profile, loading, isConfigured, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+
+  useEffect(() => {
+    if (!isConfigured) return;
+    void trackEvent("c_cool_page_view", { page_path: pathname });
+  }, [isConfigured, pathname]);
 
   useEffect(() => {
     if (isConfigured && !loading && !user) {
