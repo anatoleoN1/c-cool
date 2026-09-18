@@ -22,3 +22,30 @@ function getAdminApp(): App {
 export const adminAuth = () => getAuth(getAdminApp());
 export const adminDb = () => getFirestore(getAdminApp());
 export const adminStorage = () => getStorage(getAdminApp());
+
+
+export async function createEcoleDirecteCustomToken(
+  uid: string,
+  schoolId: string,
+  edStudentId: string,
+  edAccountType: string,
+) {
+  const auth = adminAuth();
+  let role: "student" | "moderator" | "admin" = "student";
+  try {
+    const existing = await auth.getUser(uid);
+    const existingRole = existing.customClaims?.role;
+    if (existingRole === "moderator" || existingRole === "admin") {
+      role = existingRole;
+    }
+  } catch {
+    // Premier accès : le rôle par défaut est élève.
+  }
+
+  return auth.createCustomToken(uid, {
+    role,
+    schoolId,
+    edStudentId,
+    edAccountType,
+  });
+}
