@@ -36,10 +36,10 @@ export async function POST(request: Request) {
       },
     });
 
-    response.cookies.set("c_cool_ed_pending_token", "", { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 0 });
-    response.cookies.set("c_cool_ed_token", result.token, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 604800 });
-    response.cookies.set("c_cool_ed_student", String(account.id), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 604800 });
-    response.cookies.set("c_cool_ed_school", account.codeOgec, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 604800 });
+    response.cookies.set("c_cool_ed_pending_token", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 0 });
+    response.cookies.set("c_cool_ed_token", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
+    response.cookies.set("c_cool_ed_student", String(account.id), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
+    response.cookies.set("c_cool_ed_school", account.codeOgec, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
     return response;
   } catch (error) {
     return NextResponse.json({ error: error instanceof Error ? error.message : "Validation QCM impossible." }, { status: 401 });
