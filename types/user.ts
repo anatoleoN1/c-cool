@@ -7,6 +7,10 @@ export interface User extends AuditFields {
   role: UserRole;
   activeSchoolIds: string[];
   photoURL?: string;
+  preferences?: {
+    notifications: boolean;
+    compact: boolean;
+  };
 }
 
 export interface School extends AuditFields {
