@@ -75,7 +75,7 @@ async function request<T>(
 }
 
 function extractGtk(response: Response): string | null {
-  const cookie = response.headers.get("set-cookie") || "";
+  const cookie = (typeof response.headers.getSetCookie === "function" ? response.headers.getSetCookie().join("; ") : response.headers.get("set-cookie")) || "";
   const match = cookie.match(/(?:^|[,;\\s])GTK=([^;]+)/i);
   return match?.[1] ?? null;
 }
