@@ -1,7 +1,12 @@
 "use client";
 
 import { getApp, getApps, initializeApp, type FirebaseApp } from "firebase/app";
-import { connectAuthEmulator, getAuth, type Auth } from "firebase/auth";
+import {
+  initializeAppCheck,
+  ReCaptchaEnterpriseProvider,
+  type AppCheck,
+} from "firebase/app-check";
+import { getAuth, connectAuthEmulator, type Auth } from "firebase/auth";
 import { connectFirestoreEmulator, getFirestore, type Firestore } from "firebase/firestore";
 import { connectStorageEmulator, getStorage, type FirebaseStorage } from "firebase/storage";
 
@@ -10,6 +15,7 @@ export interface FirebaseClientServices {
   auth: Auth;
   db: Firestore;
   storage: FirebaseStorage;
+  appCheck: AppCheck | null;
 }
 
 const requiredConfig = {
@@ -21,16 +27,43 @@ const requiredConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+const appCheckKey = process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_RECAPTCHA_KEY;
+
 export function isFirebaseConfigured(): boolean {
   return Object.values(requiredConfig).every(Boolean);
 }
 
 let emulatorConnected = false;
+let appCheckInstance: AppCheck | null = null;
+
+function initializeClientAppCheck(app: FirebaseApp): AppCheck | null {
+  if (typeof window === "undefined" || !appCheckKey) return null;
+  if (appCheckInstance) return appCheckInstance;
+
+  const isLocalDevelopment =
+    process.env.NODE_ENV === "development" &&
+    window.location.hostname === "localhost";
+
+  if (isLocalDevelopment) {
+    const debugScope = globalThis as typeof globalThis & {
+      FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean;
+    };
+    debugScope.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+  }
+
+  appCheckInstance = initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(appCheckKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+
+  return appCheckInstance;
+}
 
 export function getFirebaseClient(): FirebaseClientServices | null {
   if (!isFirebaseConfigured()) return null;
 
   const app = getApps().length ? getApp() : initializeApp(requiredConfig);
+  const appCheck = initializeClientAppCheck(app);
   const auth = getAuth(app);
   const db = getFirestore(app);
   const storage = getStorage(app);
@@ -42,5 +75,5 @@ export function getFirebaseClient(): FirebaseClientServices | null {
     emulatorConnected = true;
   }
 
-  return { app, auth, db, storage };
+  return { app, auth, db, storage, appCheck };
 }
