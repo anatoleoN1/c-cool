@@ -25,6 +25,12 @@ export class SubjectRepository extends FirestoreRepository<Subject> {
 export class ChapterRepository extends FirestoreRepository<Chapter> {
   constructor(schoolId: string) { super(`schools/${schoolId}/chapters`); }
 
+  listPublished(): Promise<Chapter[]> {
+    return published<Chapter>(this.path).then((items) =>
+      items.sort((a, b) => a.order - b.order),
+    );
+  }
+
   listPublishedForSubject(subjectId: string): Promise<Chapter[]> {
     return published<Chapter>(this.path).then((items) =>
       items.filter((item) => item.subjectId === subjectId).sort((a, b) => a.order - b.order),
