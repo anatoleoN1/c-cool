@@ -1,25 +1,90 @@
-import AppShell from "@/components/layout/AppShell";
+"use client";
 
-const days = [
-  { day: "Lun", date: "21", items: ["Mathématiques — 08:00", "Français — 10:00", "Physique — 14:00"] },
-  { day: "Mar", date: "22", items: ["Anglais — 09:00", "Histoire — 11:00"] },
-  { day: "Mer", date: "23", items: ["Mathématiques — 08:00", "EPS — 10:00"] },
-  { day: "Jeu", date: "24", items: ["Français — 09:00", "Physique — 13:30"] },
-  { day: "Ven", date: "25", items: ["Mathématiques — 08:00", "Anglais — 10:00"] },
-];
+import { useEffect, useMemo, useState } from "react";
+import AppShell from "@/components/layout/AppShell";
+import type { EcoleDirecteScheduleItem } from "@/lib/ecoledirecte/types";
+
+function startOfWeek(date: Date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(12, 0, 0, 0);
+  return d;
+}
+function iso(date: Date) { return date.toISOString().slice(0, 10); }
+function label(date: Date) {
+  return date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+}
 
 export default function AgendaPage() {
+  const [week, setWeek] = useState(() => startOfWeek(new Date()));
+  const [items, setItems] = useState<EcoleDirecteScheduleItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const end = new Date(week);
+    end.setDate(end.getDate() + 6);
+    void fetch(`/api/ecoledirecte/session?kind=schedule&start=${iso(week)}&end=${iso(end)}`)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Impossible de récupérer l’agenda.");
+        return data.data as EcoleDirecteScheduleItem[];
+      })
+      .then((data) => { if (!cancelled) { setItems(data || []); setError(null); } })
+      .catch((caught) => { if (!cancelled) setError(caught instanceof Error ? caught.message : "Agenda indisponible."); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [week]);
+
+  const days = useMemo(() => Array.from({ length: 5 }, (_, index) => {
+    const date = new Date(week);
+    date.setDate(date.getDate() + index);
+    const dateKey = iso(date);
+    return {
+      date,
+      dateKey,
+      items: items.filter((item) => item.start_date.slice(0, 10) === dateKey)
+        .sort((a, b) => a.start_date.localeCompare(b.start_date)),
+    };
+  }), [items, week]);
+
   return (
     <AppShell>
       <div className="page-content">
         <p className="section-label">Organisation</p>
-        <h2 className="page-title">Agenda</h2>
-        <p className="page-description">Cours, devoirs et événements regroupés dans une seule vue.</p>
+        <div className="page-heading-row">
+          <div>
+            <h2 className="page-title">Agenda</h2>
+            <p className="page-description">Ton emploi du temps réel depuis École Directe.</p>
+          </div>
+          <div className="agenda-controls">
+            <button className="text-button" onClick={() => setWeek((d) => { const n = new Date(d); n.setDate(n.getDate() - 7); return n; })}>←</button>
+            <strong>{week.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}</strong>
+            <button className="text-button" onClick={() => setWeek((d) => { const n = new Date(d); n.setDate(n.getDate() + 7); return n; })}>→</button>
+          </div>
+        </div>
+
+        {error && <p className="auth-error" role="alert">{error}</p>}
         <section className="section agenda-grid">
-          {days.map((day) => (
-            <article className="agenda-day" key={day.date}>
-              <header><span>{day.day}</span><strong>{day.date}</strong></header>
-              <div>{day.items.map((item) => <p key={item}><span className="todo-dot" />{item}</p>)}</div>
+          {loading ? <p className="page-description">Chargement de l’emploi du temps…</p> : days.map((day) => (
+            <article className="agenda-day" key={day.dateKey}>
+              <header><span>{label(day.date)}</span><strong>{day.date.getDate()}</strong></header>
+              <div>
+                {day.items.length === 0 && <p className="page-description">Aucun cours</p>}
+                {day.items.map((item) => (
+                  <div className="agenda-event" key={item.id}>
+                    <span className="agenda-time">{item.start_date.slice(11, 16)}</span>
+                    <div>
+                      <strong>{item.matiere || item.text || "Cours"}</strong>
+                      <p>{item.salle || "Salle non précisée"}{item.prof ? ` · ${item.prof}` : ""}</p>
+                      {item.isAnnule && <span className="todo-subject">Annulé</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </article>
           ))}
         </section>
