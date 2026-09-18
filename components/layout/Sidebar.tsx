@@ -10,6 +10,7 @@ const navigation = [
   { href: "/cours", label: "Cours", icon: "▤" },
   { href: "/exercices", label: "Exercices", icon: "✓" },
   { href: "/devoirs", label: "Devoirs", icon: "☑" },
+  { href: "/devoirs", label: "Devoirs", icon: "☑" },
   { href: "/revisions", label: "Révisions", icon: "↻" },
   { href: "/evaluations", label: "Évaluations", icon: "◇" },
   { href: "/calcul-mental", label: "Calcul mental", icon: "∑" },
