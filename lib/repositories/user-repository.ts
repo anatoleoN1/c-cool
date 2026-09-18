@@ -13,4 +13,16 @@ export class UserRepository extends FirestoreRepository<User> {
     if (!services) throw new Error("Firebase n'est pas configuré.");
     await updateDoc(doc(services.db, "users", uid), { ...data, updatedAt: new Date().toISOString() });
   }
+
+  async updatePreferences(
+    uid: string,
+    preferences: NonNullable<User["preferences"]>,
+  ): Promise<void> {
+    const services = getFirebaseClient();
+    if (!services) throw new Error("Firebase n'est pas configuré.");
+    await updateDoc(doc(services.db, "users", uid), {
+      preferences,
+      updatedAt: new Date().toISOString(),
+    });
+  }
 }
