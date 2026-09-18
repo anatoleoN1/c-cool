@@ -5,21 +5,20 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ChapterRepository, SubjectRepository } from "@/lib/repositories/learning-repository";
-import type { Chapter, Subject } from "@/types";
+import type { Subject } from "@/types";
 
 export default function CoursPage() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [subjects, setSubjects] = useState<Array<Subject & { chapterCount: number }>>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
+  const loading = authLoading || dataLoading;
 
   useEffect(() => {
     const schoolId = profile?.activeSchoolIds[0];
-    if (!schoolId) {
-      setLoading(false);
-      return;
-    }
+    if (!schoolId) return;
 
     let cancelled = false;
+    setDataLoading(true);
 
     async function load() {
       try {
@@ -36,7 +35,7 @@ export default function CoursPage() {
           setSubjects(withCounts.sort((a, b) => a.name.localeCompare(b.name, "fr")));
         }
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setDataLoading(false);
       }
     }
 
@@ -64,11 +63,7 @@ export default function CoursPage() {
             </div>
           )}
           {subjects.map((subject) => (
-            <Link
-              href={`/cours/${subject.id}`}
-              className="course-row"
-              key={subject.id}
-            >
+            <Link href={`/cours/${subject.id}`} className="course-row" key={subject.id}>
               <span className="course-mark" style={subject.color ? { background: subject.color } : undefined}>
                 {subject.name.slice(0, 1)}
               </span>
