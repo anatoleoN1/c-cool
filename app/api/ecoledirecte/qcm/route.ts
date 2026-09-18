@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { adminAuth } from "@/lib/firebase/admin";
+import { createEcoleDirecteCustomToken } from "@/lib/firebase/admin";
 import { completeQcm } from "@/lib/ecoledirecte/client";
 
 export const runtime = "nodejs";
@@ -17,12 +17,7 @@ export async function POST(request: Request) {
     const result = await completeQcm(body.identifiant, body.motdepasse, pendingToken, body.choice);
     const account = result.account;
     const uid = `ed_${account.codeOgec}_${account.id}`;
-    const customToken = await adminAuth().createCustomToken(uid, {
-      role: "student",
-      schoolId: account.codeOgec,
-      edStudentId: String(account.id),
-      edAccountType: account.typeCompte,
-    });
+    const customToken = await createEcoleDirecteCustomToken(uid, account.codeOgec, String(account.id), account.typeCompte);
 
     const response = NextResponse.json({
       customToken,
