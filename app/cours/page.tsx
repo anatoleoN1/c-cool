@@ -14,7 +14,7 @@ export default function CoursPage() {
   const loading = authLoading || (!!profile && dataLoading);
 
   useEffect(() => {
-    const schoolId = profile?.activeSchoolIds[0];
+    const schoolId = profile?.activeSchoolIds[0] ?? "";
     if (!schoolId) return;
 
     let cancelled = false;
