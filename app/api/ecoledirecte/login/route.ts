@@ -44,9 +44,9 @@ export async function POST(request: Request) {
       edAccountType: account.typeCompte,
     });
     const response = NextResponse.json(responseFor(account, customToken));
-    response.cookies.set("c_cool_ed_pending_token", result.token, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
-    response.cookies.set("c_cool_ed_student", String(account.id), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 604800 });
-    response.cookies.set("c_cool_ed_school", account.codeOgec, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 604800 });
+    response.cookies.set("c_cool_ed_pending_token", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 600 });
+    response.cookies.set("c_cool_ed_student", String(account.id), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
+    response.cookies.set("c_cool_ed_school", account.codeOgec, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
     return response;
   } catch (error) {
     const status = error instanceof Error && "status" in error ? Number((error as { status: number }).status) : 502;
