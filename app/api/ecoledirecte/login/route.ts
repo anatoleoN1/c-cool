@@ -27,12 +27,19 @@ export async function POST(request: Request) {
     }
     const result = await login(body.identifiant.trim(), body.motdepasse);
     if (result.kind === "qcm") {
-      return NextResponse.json({
+      const response = NextResponse.json({
         requiresQcm: true,
-        
         question: result.question,
         propositions: result.propositions,
       });
+      response.cookies.set("c_cool_ed_pending_token", result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 600,
+      });
+      return response;
     }
 
     const account = result.account;
