@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { ProgressRepository } from "@/lib/repositories/progress-repository";
 import {
   generateMentalMathQuestions,
   type MentalMathFormat,
@@ -24,6 +26,7 @@ const FORMAT_LABELS: Record<MentalMathFormat, string> = {
 };
 
 export default function CalculMentalPage() {
+  const { user, profile } = useAuth();
   const [operations, setOperations] = useState<MentalMathOperation[]>([
     "addition",
     "subtraction",
@@ -39,6 +42,7 @@ export default function CalculMentalPage() {
   const [finished, setFinished] = useState(false);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
   const startSession = useCallback(() => {
@@ -49,6 +53,7 @@ export default function CalculMentalPage() {
       max: 12,
       count,
     });
+    const now = Date.now();
     setQuestions(generated);
     setCurrent(0);
     setAnswer("");
@@ -56,7 +61,8 @@ export default function CalculMentalPage() {
     setFeedback(null);
     setFinished(false);
     setStarted(true);
-    setStartedAt(Date.now());
+    setStartedAt(now);
+    setQuestionStartedAt(now);
     setElapsed(0);
   }, [count, format, operations]);
 
@@ -79,12 +85,36 @@ export default function CalculMentalPage() {
     });
   }
 
-  function submitAnswer(event: React.FormEvent) {
+  async function submitAnswer(event: React.FormEvent) {
     event.preventDefault();
     if (!questions[current] || feedback) return;
 
     const value = Number(answer.replace(",", "."));
     const isCorrect = Number.isFinite(value) && value === questions[current].answer;
+    const responseTimeMs = questionStartedAt === null ? 0 : Date.now() - questionStartedAt;
+    const schoolId = profile?.activeSchoolIds[0];
+
+    if (user && schoolId) {
+      const now = new Date().toISOString();
+      void new ProgressRepository(user.uid).createMentalMathAttempt({
+        userId: user.uid,
+        schoolId,
+        operation: questions[current].operation,
+        format: questions[current].format,
+        difficulty: 1,
+        question: questions[current].text,
+        answer,
+        expectedAnswer: String(questions[current].answer),
+        correct: isCorrect,
+        responseTimeMs,
+        timed: false,
+        createdAt: now,
+        updatedAt: now,
+        createdBy: user.uid,
+        updatedBy: user.uid,
+      }).catch(() => undefined);
+    }
+
     setFeedback(isCorrect ? "correct" : "wrong");
     if (isCorrect) setCorrect((score) => score + 1);
 
@@ -95,9 +125,11 @@ export default function CalculMentalPage() {
         setFeedback(null);
         return;
       }
+      const nextStartedAt = Date.now();
       setCurrent((index) => index + 1);
       setAnswer("");
       setFeedback(null);
+      setQuestionStartedAt(nextStartedAt);
     }, 550);
   }
 
@@ -173,7 +205,9 @@ export default function CalculMentalPage() {
               <span>{current + 1} / {questions.length}</span>
               <span>{elapsed.toFixed(1)} s</span>
             </div>
-            <div className="mental-progress"><span style={{ width: `${((current + 1) / questions.length) * 100}%` }} /></div>
+            <div className="mental-progress">
+              <span style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
+            </div>
 
             <div className={`mental-question ${feedback ?? ""}`}>
               <p className="mental-label">{FORMAT_LABELS[currentQuestion.format]}</p>
@@ -201,7 +235,9 @@ export default function CalculMentalPage() {
             <p className="section-label">Série terminée</p>
             <h3>{correct} / {questions.length}</h3>
             <p>{percentage}% de réussite · {elapsed.toFixed(1)} secondes</p>
-            <button className="mental-start" type="button" onClick={startSession}>Recommencer <span>↻</span></button>
+            <button className="mental-start" type="button" onClick={startSession}>
+              Recommencer <span>↻</span>
+            </button>
           </section>
         )}
       </div>
