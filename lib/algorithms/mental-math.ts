@@ -97,7 +97,7 @@ function makeQuestion(
 }
 
 export function generateMentalMathQuestions(config: MentalMathConfig): MentalMathQuestion[] {
-  const operations = config.operations.length ? config.operations : ["addition"];
+  const operations: MentalMathOperation[] = config.operations.length ? config.operations : ["addition"];
   const formats = config.formats?.length ? config.formats : ["direct"];
   const min = Math.max(0, config.min ?? 1);
   const max = Math.max(min, config.max ?? 10);
