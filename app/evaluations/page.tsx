@@ -1,38 +1,36 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { AssessmentRepository } from "@/lib/repositories/learning-repository";
 import type { Assessment } from "@/types";
 
 export default function EvaluationsPage() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
+  const [now] = useState(() => Date.now());
+  const loading = authLoading || dataLoading;
 
   useEffect(() => {
     const schoolId = profile?.activeSchoolIds[0];
-    if (!schoolId) {
-      setLoading(false);
-      return;
-    }
+    if (!schoolId) return;
+
     let cancelled = false;
+    setDataLoading(true);
     void new AssessmentRepository(schoolId)
       .listPublished()
       .then((items) => {
         if (!cancelled) setAssessments(items);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setDataLoading(false);
       });
     return () => { cancelled = true; };
   }, [profile?.activeSchoolIds]);
 
-  const upcoming = useMemo(
-    () => assessments.filter((item) => new Date(item.date).getTime() >= Date.now()),
-    [assessments],
-  );
+  const upcoming = assessments.filter((item) => new Date(item.date).getTime() >= now);
 
   return (
     <AppShell>
