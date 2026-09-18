@@ -9,66 +9,61 @@ import { generateAdaptiveRevisionPlan, type PlannedRevisionSession } from "@/lib
 import type { Assessment, Chapter, Progress } from "@/types";
 
 export default function RevisionsPage() {
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [progress, setProgress] = useState<Progress[]>([]);
   const [selectedId, setSelectedId] = useState("");
-  const [sessions, setSessions] = useState<PlannedRevisionSession[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [now] = useState(() => Date.now());
+  const loading = authLoading || dataLoading;
 
   useEffect(() => {
     const schoolId = profile?.activeSchoolIds[0];
-    if (!schoolId || !user) {
-      setLoading(false);
-      return;
-    }
+    if (!schoolId || !user) return;
+
     let cancelled = false;
+    setDataLoading(true);
     void Promise.all([
       new AssessmentRepository(schoolId).listPublished(),
       new ChapterRepository(schoolId).listPublished(),
       new ProgressRepository(user.uid).listChapterProgress(),
     ]).then(([assessmentItems, chapterItems, progressItems]) => {
       if (cancelled) return;
-      const upcoming = assessmentItems.filter((item) => new Date(item.date).getTime() >= Date.now());
+      const upcoming = assessmentItems.filter((item) => new Date(item.date).getTime() >= now);
       setAssessments(upcoming);
       setChapters(chapterItems);
       setProgress(progressItems);
-      setSelectedId(upcoming[0]?.id ?? "");
+      setSelectedId((current) => current || upcoming[0]?.id || "");
     }).finally(() => {
-      if (!cancelled) setLoading(false);
+      if (!cancelled) setDataLoading(false);
     });
     return () => { cancelled = true; };
-  }, [profile?.activeSchoolIds, user]);
+  }, [profile?.activeSchoolIds, user, now]);
 
   const selected = useMemo(
     () => assessments.find((item) => item.id === selectedId) ?? null,
     [assessments, selectedId],
   );
 
-  useEffect(() => {
-    if (!selected) {
-      setSessions([]);
-      return;
-    }
-    const generated = generateAdaptiveRevisionPlan(selected, chapters, progress);
-    setSessions(generated);
-    setSaved(false);
-  }, [selected, chapters, progress]);
+  const sessions = useMemo<PlannedRevisionSession[]>(
+    () => selected ? generateAdaptiveRevisionPlan(selected, chapters, progress) : [],
+    [selected, chapters, progress],
+  );
 
   async function savePlan() {
     if (!user || !profile?.activeSchoolIds[0] || !selected) return;
-    const now = new Date().toISOString();
+    const currentTime = new Date().toISOString();
     await new ProgressRepository(user.uid).saveRevisionPlan({
       userId: user.uid,
       schoolId: profile.activeSchoolIds[0],
       assessmentId: selected.id,
-      generatedFor: now,
+      generatedFor: currentTime,
       sessions,
       status: "active",
-      createdAt: now,
-      updatedAt: now,
+      createdAt: currentTime,
+      updatedAt: currentTime,
       createdBy: user.uid,
       updatedBy: user.uid,
     });
