@@ -1,6 +1,6 @@
 "use client";
 
-import { collection, getDocs, query, where, doc, setDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import type { Progress, RevisionPlan } from "@/types";
 import { getFirebaseClient } from "@/lib/firebase/client";
 
@@ -31,7 +31,7 @@ export class ProgressRepository {
     const services = getFirebaseClient();
     if (!services) throw new Error("Firebase n'est pas configuré.");
     const id = crypto.randomUUID();
-    await setDoc(doc(services.db, "users", this.userId, "mentalMathAttempts", id), { id, ...attempt });
+    await setDoc(doc(services.db, this.userId, "mentalMathAttempts", id), { id, ...attempt });
     return id;
   }
 
@@ -39,7 +39,7 @@ export class ProgressRepository {
     const services = getFirebaseClient();
     if (!services) throw new Error("Firebase n'est pas configuré.");
     const id = crypto.randomUUID();
-    await setDoc(doc(services.db, "users", this.userId, "revisionPlans", id), { id, ...plan });
+    await setDoc(doc(services.db, this.userId, "revisionPlans", id), { id, ...plan });
     return id;
   }
 }
