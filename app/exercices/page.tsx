@@ -8,24 +8,24 @@ import { ExerciseRepository } from "@/lib/repositories/learning-repository";
 import type { Exercise } from "@/types";
 
 export default function ExercicesPage() {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const [exercises, setExercises] = useState<Exercise[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(false);
+  const loading = authLoading || dataLoading;
 
   useEffect(() => {
     const schoolId = profile?.activeSchoolIds[0];
-    if (!schoolId) {
-      setLoading(false);
-      return;
-    }
+    if (!schoolId) return;
+
     let cancelled = false;
+    setDataLoading(true);
     void new ExerciseRepository(schoolId)
       .listPublished()
       .then((items) => {
         if (!cancelled) setExercises(items);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setDataLoading(false);
       });
     return () => { cancelled = true; };
   }, [profile?.activeSchoolIds]);
