@@ -1,11 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { UserRepository } from "@/lib/repositories/user-repository";
 
 export default function SettingsPage() {
-  const [notifications, setNotifications] = useState(true);
-  const [compact, setCompact] = useState(false);
+  const { user, profile } = useAuth();
+  const [notifications, setNotifications] = useState(profile?.preferences?.notifications ?? true);
+  const [compact, setCompact] = useState(profile?.preferences?.compact ?? false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setNotifications(profile?.preferences?.notifications ?? true);
+    setCompact(profile?.preferences?.compact ?? false);
+  }, [profile?.preferences]);
+
+  async function save(preferences: { notifications: boolean; compact: boolean }) {
+    if (!user) return;
+    setSaved(false);
+    try {
+      await new UserRepository().updatePreferences(user.uid, preferences);
+      setSaved(true);
+    } catch {
+      setSaved(false);
+    }
+  }
+
+  function changeNotifications(value: boolean) {
+    setNotifications(value);
+    void save({ notifications: value, compact });
+  }
+
+  function changeCompact(value: boolean) {
+    setCompact(value);
+    void save({ notifications, compact: value });
+  }
 
   return (
     <AppShell>
@@ -14,9 +44,18 @@ export default function SettingsPage() {
         <h2 className="page-title">Paramètres</h2>
         <p className="page-description">Gère les préférences de ton espace C-Cool.</p>
         <section className="section settings-list">
-          <label className="setting-row"><div><strong>Notifications</strong><p>Recevoir les rappels de devoirs et révisions.</p></div><input type="checkbox" checked={notifications} onChange={(e) => setNotifications(e.target.checked)} /></label>
-          <label className="setting-row"><div><strong>Affichage compact</strong><p>Réduire l’espacement dans les listes.</p></div><input type="checkbox" checked={compact} onChange={(e) => setCompact(e.target.checked)} /></label>
-          <div className="setting-row"><div><strong>Compte</strong><p>Les informations sensibles et l’authentification sont gérées par Firebase.</p></div></div>
+          <label className="setting-row">
+            <div><strong>Notifications</strong><p>Recevoir les rappels de devoirs et révisions.</p></div>
+            <input type="checkbox" checked={notifications} onChange={(e) => changeNotifications(e.target.checked)} />
+          </label>
+          <label className="setting-row">
+            <div><strong>Affichage compact</strong><p>Réduire l’espacement dans les listes.</p></div>
+            <input type="checkbox" checked={compact} onChange={(e) => changeCompact(e.target.checked)} />
+          </label>
+          {saved && <p className="success-message">Préférences enregistrées.</p>}
+          <div className="setting-row">
+            <div><strong>Compte</strong><p>Les informations sensibles et l’authentification sont gérées par Firebase.</p></div>
+          </div>
         </section>
       </div>
     </AppShell>
