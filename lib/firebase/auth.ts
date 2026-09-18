@@ -13,7 +13,7 @@ import { getFirebaseClient } from "./client";
 
 export type EcoleDirecteLoginResult =
   | { kind: "signed-in"; user: FirebaseUser }
-  | { kind: "qcm"; identifiant: string; motdepasse: string; pendingToken: string; question: string; propositions: string[] };
+  | { kind: "qcm"; identifiant: string; motdepasse: string; pendingToken: string; question: string; propositions: Array<{ encoded: string; label: string }> };
 
 async function completeFirebaseLogin(payload: {
   customToken: string;
