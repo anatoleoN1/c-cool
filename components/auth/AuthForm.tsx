@@ -55,8 +55,8 @@ export default function AuthForm({ nextPath }: { nextPath: string }) {
           <p><strong>{qcm.question}</strong></p>
           <div className="qcm-options">
             {qcm.propositions.map((choice) => (
-              <button key={choice} type="button" className="auth-submit" disabled={pending} onClick={() => void submitQcm(choice.encoded)}>
-                {choice}
+              <button key={choice.encoded} type="button" className="auth-submit" disabled={pending} onClick={() => void submitQcm(choice.encoded)}>
+                {choice.label}
               </button>
             ))}
           </div>
