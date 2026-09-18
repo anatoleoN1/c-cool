@@ -6,7 +6,7 @@ service cloud.firestore {
     function isAdmin() { return role() == 'admin'; }
     function isModerator() { return role() == 'moderator' || isAdmin(); }
     function isMember(schoolId) {
-      return signedIn() && exists(/databases/$(database)/documents/schools/$(schoolId)/members/$(request.auth.uid));
+      return signedIn() && request.auth.token.schoolId == schoolId;
     }
     function unchangedRole() { return request.resource.data.role == resource.data.role; }
 
@@ -14,21 +14,22 @@ service cloud.firestore {
       allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
       allow create: if signedIn() && request.auth.uid == userId
         && request.resource.data.role == 'student'
-        && request.resource.data.activeSchoolIds.size() == 0;
+        && request.resource.data.activeSchoolIds == [request.auth.token.schoolId];
       allow update: if signedIn() && request.auth.uid == userId
         && unchangedRole()
         && request.resource.data.activeSchoolIds == resource.data.activeSchoolIds;
-      allow delete: if false;
 
       match /progress/{progressId} {
         allow read, write: if signedIn() && request.auth.uid == userId;
       }
       match /revisionPlans/{planId} {
-        allow read: if signedIn() && request.auth.uid == userId;
-        allow write: if false;
+        allow read, create: if signedIn() && request.auth.uid == userId
+          && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if false;
       }
       match /mentalMathAttempts/{attemptId} {
-        allow read, create: if signedIn() && request.auth.uid == userId;
+        allow read, create: if signedIn() && request.auth.uid == userId
+          && request.resource.data.userId == request.auth.uid;
         allow update, delete: if false;
       }
     }
