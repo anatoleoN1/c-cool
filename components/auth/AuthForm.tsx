@@ -9,7 +9,7 @@ export default function AuthForm({ nextPath }: { nextPath: string }) {
   const router = useRouter();
   const [identifiant, setIdentifiant] = useState("");
   const [motdepasse, setMotdepasse] = useState("");
-  const [qcm, setQcm] = useState<{ pendingToken: string; question: string; propositions: Array<{ encoded: string; label: string }> } | null>(null);
+  const [qcm, setQcm] = useState<{ question: string; propositions: Array<{ encoded: string; label: string }> } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -20,7 +20,7 @@ export default function AuthForm({ nextPath }: { nextPath: string }) {
     try {
       const result = await signIn(identifiant, motdepasse);
       if (result.kind === "qcm") {
-        setQcm({ pendingToken: result.pendingToken, question: result.question, propositions: result.propositions });
+        setQcm({ question: result.question, propositions: result.propositions });
         return;
       }
       router.replace(nextPath.startsWith("/") ? nextPath : "/");
@@ -32,7 +32,7 @@ export default function AuthForm({ nextPath }: { nextPath: string }) {
   async function submitQcm(choice: string) {
     setPending(true); setError(null);
     try {
-      await completeEcoleDirecteQcm(identifiant, motdepasse, qcm!.pendingToken, choice);
+      await completeEcoleDirecteQcm(identifiant, motdepasse, choice);
       router.replace(nextPath.startsWith("/") ? nextPath : "/");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Le QCM a échoué.");
