@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const navigation = [
   { href: "/", label: "Accueil", icon: "⌂" },
@@ -9,6 +10,7 @@ const navigation = [
   { href: "/cours", label: "Cours", icon: "▤" },
   { href: "/exercices", label: "Exercices", icon: "✓" },
   { href: "/revisions", label: "Révisions", icon: "↻" },
+  { href: "/evaluations", label: "Évaluations", icon: "◇" },
   { href: "/calcul-mental", label: "Calcul mental", icon: "∑" },
   { href: "/classe", label: "Classe", icon: "◎" },
   { href: "/messages", label: "Messages", icon: "□" },
@@ -16,6 +18,7 @@ const navigation = [
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
+  const { profile } = useAuth();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -69,6 +72,14 @@ export default function MobileMenu() {
                 </Link>
               ))}
 
+              {profile?.role === "moderator" || profile?.role === "admin" ? (
+                <Link href="/moderation" className="nav-item" onClick={() => setOpen(false)}>
+                  <span className="nav-icon">⚑</span><span>Modération</span>
+                </Link>
+              ) : null}
+              <Link href="/contribuer" className="nav-item" onClick={() => setOpen(false)}>
+                <span className="nav-icon">＋</span><span>Contribuer</span>
+              </Link>
               <Link
                 href="/parametres"
                 className="nav-item"
