@@ -38,8 +38,30 @@ type EcoleDirecteResponse<T> = {
 function decodeBase64(value: string | undefined): string {
   if (!value) return "";
 
+  // Certaines réponses École Directe (notamment la question du QCM)
+  // peuvent déjà être du texte UTF-8. Buffer.from(..., "base64")
+  // accepte silencieusement une chaîne qui n'est pas du base64 et
+  // peut alors produire des caractères illisibles.
+  const normalized = value.trim();
+
+  if (
+    normalized.length === 0 ||
+    normalized.length % 4 !== 0 ||
+    !/^[A-Za-z0-9+/]+={0,2}$/.test(normalized)
+  ) {
+    return value;
+  }
+
   try {
-    return Buffer.from(value, "base64").toString("utf8");
+    const decoded = Buffer.from(normalized, "base64").toString("utf8");
+
+    // On ne remplace le texte original que si le décodage donne
+    // réellement une chaîne UTF-8 exploitable.
+    if (!decoded || decoded.includes("\uFFFD")) {
+      return value;
+    }
+
+    return decoded;
   } catch {
     return value;
   }
