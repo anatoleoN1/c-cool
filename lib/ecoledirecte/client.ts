@@ -7,10 +7,11 @@ import type {
 } from "./types";
 
 const BASE_URL = "https://api.ecoledirecte.com/v3";
-const API_VERSION = process.env.ECOLEDIRECTE_API_VERSION || "7.12.1";
+const API_VERSION = process.env.ECOLEDIRECTE_API_VERSION || "4.96.3";
+
 const USER_AGENT =
   process.env.ECOLEDIRECTE_USER_AGENT ||
-  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36";
+  "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36";
 
 export class EcoleDirecteError extends Error {
   constructor(
@@ -22,8 +23,21 @@ export class EcoleDirecteError extends Error {
   }
 }
 
+type EcoleDirecteSession = {
+  gtk: string;
+  cookie: string;
+  twoFaToken?: string;
+  xToken?: string;
+};
+
+type EcoleDirecteResponse<T> = {
+  body: EcoleDirecteEnvelope<T>;
+  session: Partial<EcoleDirecteSession>;
+};
+
 function decodeBase64(value: string | undefined): string {
   if (!value) return "";
+
   try {
     return Buffer.from(value, "base64").toString("utf8");
   } catch {
@@ -31,34 +45,184 @@ function decodeBase64(value: string | undefined): string {
   }
 }
 
-async function readJson<T>(response: Response): Promise<EcoleDirecteEnvelope<T>> {
-  const body = (await response.json()) as EcoleDirecteEnvelope<T>;
-  if (!response.ok) throw new EcoleDirecteError("EcoleDirecte est indisponible.", undefined, 502);
-  return body;
+/**
+ * Récupère tous les Set-Cookie sans jamais les afficher.
+ */
+function getSetCookies(response: Response): string[] {
+  if (typeof response.headers.getSetCookie === "function") {
+    return response.headers.getSetCookie();
+  }
+
+  const header = response.headers.get("set-cookie");
+  return header ? [header] : [];
+}
+
+/**
+ * Transforme les Set-Cookie en header Cookie utilisable
+ * par la requête suivante.
+ */
+function cookiesFromResponse(response: Response): string {
+  return getSetCookies(response)
+    .map((cookie) => cookie.split(";", 1)[0])
+    .filter(Boolean)
+    .join("; ");
+}
+
+/**
+ * Fusionne les nouveaux cookies avec ceux déjà connus.
+ *
+ * ÉcoleDirecte utilise parfois un cookie dont le nom est opaque.
+ * On conserve donc le couple nom=valeur sans jamais supposer
+ * le nom du cookie.
+ */
+function mergeCookies(
+  current: string | undefined,
+  response: Response,
+): string {
+  const jar = new Map<string, string>();
+
+  for (const cookie of current?.split(";") ?? []) {
+    const separator = cookie.indexOf("=");
+
+    if (separator <= 0) continue;
+
+    const name = cookie.slice(0, separator).trim();
+    const value = cookie.slice(separator + 1).trim();
+
+    if (name) {
+      jar.set(name, value);
+    }
+  }
+
+  for (const cookie of getSetCookies(response)) {
+    const pair = cookie.split(";", 1)[0];
+    const separator = pair.indexOf("=");
+
+    if (separator <= 0) continue;
+
+    const name = pair.slice(0, separator).trim();
+    const value = pair.slice(separator + 1).trim();
+
+    if (name) {
+      jar.set(name, value);
+    }
+  }
+
+  return [...jar.entries()]
+    .map(([name, value]) => `${name}=${value}`)
+    .join("; ");
+}
+
+function extractGtk(response: Response): string | null {
+  const cookies = getSetCookies(response);
+
+  for (const cookie of cookies) {
+    const match = cookie.match(/(?:^|;\s*)GTK=([^;]+)/i);
+
+    if (match?.[1]) {
+      return match[1];
+    }
+  }
+
+  return null;
+}
+
+async function readResponse<T>(
+  response: Response,
+  previousCookie?: string,
+): Promise<EcoleDirecteResponse<T>> {
+  let body: EcoleDirecteEnvelope<T>;
+
+  try {
+    body = (await response.json()) as EcoleDirecteEnvelope<T>;
+  } catch {
+    throw new EcoleDirecteError(
+      "EcoleDirecte a renvoyé une réponse invalide.",
+      undefined,
+      502,
+    );
+  }
+
+  if (!response.ok) {
+    throw new EcoleDirecteError(
+      "EcoleDirecte est indisponible.",
+      undefined,
+      502,
+    );
+  }
+
+  const session: Partial<EcoleDirecteSession> = {};
+
+  const xToken = response.headers.get("X-Token");
+  const twoFaToken = response.headers.get("2FA-Token");
+
+  if (xToken) {
+    session.xToken = xToken;
+  }
+
+  if (twoFaToken) {
+    session.twoFaToken = twoFaToken;
+  }
+
+  const mergedCookie = mergeCookies(previousCookie, response);
+
+  if (mergedCookie) {
+    session.cookie = mergedCookie;
+  }
+
+  return {
+    body,
+    session,
+  };
 }
 
 async function request<T>(
   path: string,
   options: {
     method?: "GET" | "POST" | "PUT";
-    token?: string;
+    xToken?: string;
+    twoFaToken?: string;
     gtk?: string;
+    cookie?: string;
     data?: unknown;
+    query?: Record<string, string>;
   } = {},
-): Promise<EcoleDirecteEnvelope<T>> {
+): Promise<EcoleDirecteResponse<T>> {
   const url = new URL(`${BASE_URL}${path}`);
+
   url.searchParams.set("v", API_VERSION);
+
+  for (const [key, value] of Object.entries(options.query ?? {})) {
+    url.searchParams.set(key, value);
+  }
 
   const headers: HeadersInit = {
     "User-Agent": USER_AGENT,
     Accept: "application/json",
   };
-  if (options.token) headers["X-Token"] = options.token;
-  if (options.gtk) headers["X-Gtk"] = options.gtk;
+
+  if (options.xToken) {
+    headers["X-Token"] = options.xToken;
+  }
+
+  if (options.twoFaToken) {
+    headers["2FA-Token"] = options.twoFaToken;
+  }
+
+  if (options.gtk) {
+    headers["X-Gtk"] = options.gtk;
+  }
+
+  if (options.cookie) {
+    headers["Cookie"] = options.cookie;
+  }
 
   let body: string | undefined;
+
   if (options.data !== undefined) {
-    headers["Content-Type"] = "application/x-www-form-urlencoded;charset=UTF-8";
+    headers["Content-Type"] =
+      "application/x-www-form-urlencoded;charset=UTF-8";
+
     body = `data=${encodeURIComponent(JSON.stringify(options.data))}`;
   }
 
@@ -69,127 +233,313 @@ async function request<T>(
     cache: "no-store",
   });
 
-  return readJson<T>(response);
+  return readResponse<T>(response, options.cookie);
 }
 
-function extractGtk(response: Response): string | null {
-  const cookie = (typeof response.headers.getSetCookie === "function" ? response.headers.getSetCookie().join("; ") : response.headers.get("set-cookie")) || "";
-  const match = cookie.match(/(?:^|[,;\\s])GTK=([^;]+)/i);
-  return match?.[1] ?? null;
+async function bootstrap(): Promise<{
+  gtk: string;
+  cookie: string;
+}> {
+  const response = await fetch(
+    `${BASE_URL}/login.awp?gtk=1&v=${encodeURIComponent(API_VERSION)}`,
+    {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "application/json",
+      },
+      cache: "no-store",
+    },
+  );
+
+  if (!response.ok) {
+    throw new EcoleDirecteError(
+      "EcoleDirecte n'a pas accepté le bootstrap GTK.",
+      undefined,
+      502,
+    );
+  }
+
+  const gtk = extractGtk(response);
+  const cookie = cookiesFromResponse(response);
+
+  if (!gtk || !cookie) {
+    throw new EcoleDirecteError(
+      "EcoleDirecte n’a pas fourni les informations GTK nécessaires.",
+    );
+  }
+
+  return { gtk, cookie };
 }
+
+function selectAccount(
+  accounts: EcoleDirecteAccount[],
+): EcoleDirecteAccount {
+  const account =
+    accounts.find((item) => item.typeCompte === "E") ||
+    accounts[0];
+
+  if (!account) {
+    throw new EcoleDirecteError(
+      "Aucun compte élève n’a été renvoyé par EcoleDirecte.",
+      undefined,
+      401,
+    );
+  }
+
+  return account;
+}
+
+export type EcoleDirecteLoginResult =
+  | {
+      kind: "success";
+      token: string;
+      account: EcoleDirecteAccount;
+    }
+  | {
+      kind: "qcm";
+      token: string;
+      twoFaToken: string;
+      cookie: string;
+      question: string;
+      propositions: Array<{
+        encoded: string;
+        label: string;
+      }>;
+    };
 
 export async function login(
   identifiant: string,
   motdepasse: string,
-): Promise<
-  | { kind: "success"; token: string; account: EcoleDirecteAccount }
-  | { kind: "qcm"; token: string; question: string; propositions: Array<{ encoded: string; label: string }> }
-> {
-  const gtkResponse = await fetch(
-    `${BASE_URL}/login.awp?gtk=1&v=${encodeURIComponent(API_VERSION)}`,
-    { headers: { "User-Agent": USER_AGENT }, cache: "no-store" },
-  );
-  const gtk = extractGtk(gtkResponse);
-  if (!gtk) throw new EcoleDirecteError("EcoleDirecte n’a pas fourni le cookie GTK.");
+): Promise<EcoleDirecteLoginResult> {
+  const initial = await bootstrap();
 
-  const result = await request<{ accounts: EcoleDirecteAccount[] }>(
-    `/login.awp`,
-    {
-      method: "POST",
-      gtk,
-      data: { identifiant, motdepasse, isRelogin: false, uuid: "" },
+  const result = await request<{
+    accounts: EcoleDirecteAccount[];
+  }>("/login.awp", {
+    method: "POST",
+    gtk: initial.gtk,
+    cookie: initial.cookie,
+    data: {
+      identifiant,
+      motdepasse,
+      isRelogin: false,
+      uuid: "",
     },
-  );
+  });
 
-  if (result.code === 250) {
-    const challenge = await request<{ question: string; propositions: string[] }>(
-      "/connexion/doubleauth.awp",
-      { method: "GET", token: result.token },
-    );
+  const token = result.body.token || "";
+  const twoFaToken = result.session.twoFaToken || "";
+
+  if (result.body.code === 250) {
+    if (!token || !twoFaToken) {
+      throw new EcoleDirecteError(
+        "EcoleDirecte a demandé une vérification mais n’a pas fourni le jeton 2FA nécessaire.",
+        result.body.code,
+        401,
+      );
+    }
+
+    let cookie = result.session.cookie || initial.cookie;
+
+    /**
+     * Récupération du QCM.
+     *
+     * Le comportement validé par notre diagnostic est :
+     * JSON token → header 2FA-Token + cookies.
+     */
+    const challenge = await request<{
+      question: string;
+      propositions: string[];
+    }>("/connexion/doubleauth.awp", {
+      method: "GET",
+      twoFaToken,
+      cookie,
+      data: {},
+    });
+
+    cookie = challenge.session.cookie || cookie;
+
+    const currentTwoFaToken =
+      challenge.session.twoFaToken || twoFaToken;
+
     return {
       kind: "qcm",
-      token: result.token || "",
-      question: decodeBase64(challenge.data.question),
-      propositions: (challenge.data.propositions || []).map((encoded) => ({ encoded, label: decodeBase64(encoded) })),
+      token,
+      twoFaToken: currentTwoFaToken,
+      cookie,
+      question: decodeBase64(challenge.body.data?.question),
+      propositions: (
+        challenge.body.data?.propositions || []
+      ).map((encoded) => ({
+        encoded,
+        label: decodeBase64(encoded),
+      })),
     };
   }
 
-  if (result.code !== 200 || !result.token || !result.data?.accounts?.length) {
-    throw new EcoleDirecteError(result.message || "Identifiant ou mot de passe invalide.", result.code, 401);
+  if (
+    result.body.code !== 200 ||
+    !token ||
+    !result.body.data?.accounts?.length
+  ) {
+    throw new EcoleDirecteError(
+      result.body.message ||
+        "Identifiant ou mot de passe invalide.",
+      result.body.code,
+      401,
+    );
   }
 
-  const account =
-    result.data.accounts.find((item) => item.typeCompte === "E") ||
-    result.data.accounts[0];
-
-  return { kind: "success", token: result.token, account };
+  return {
+    kind: "success",
+    token,
+    account: selectAccount(result.body.data.accounts),
+  };
 }
 
 export async function completeQcm(
   identifiant: string,
   motdepasse: string,
   pendingToken: string,
+  pendingTwoFaToken: string,
+  pendingCookie: string,
   encodedChoice: string,
-): Promise<{ token: string; account: EcoleDirecteAccount }> {
-  const answer = await request<{ cn: string; cv: string }>(
-    "/connexion/doubleauth.awp",
-    { method: "POST", token: pendingToken, data: { choix: encodedChoice } },
-  );
+): Promise<{
+  token: string;
+  account: EcoleDirecteAccount;
+}> {
+  /**
+   * Étape 1 : réponse au QCM.
+   *
+   * On utilise exactement la combinaison qui vient
+   * d’être validée par ed-diag-qcm-v3 :
+   *
+   * 2FA-Token courant + cookies courants.
+   */
+  const answer = await request<{
+    cn: string;
+    cv: string;
+  }>("/connexion/doubleauth.awp", {
+    method: "POST",
+    twoFaToken: pendingTwoFaToken,
+    cookie: pendingCookie,
+    data: {
+      choix: encodedChoice,
+    },
+  });
 
-  if (answer.code !== 200 || !answer.data?.cn || !answer.data?.cv) {
-    throw new EcoleDirecteError(answer.message || "Réponse QCM refusée.", answer.code, 401);
+  if (
+    answer.body.code !== 200 ||
+    !answer.body.data?.cn ||
+    !answer.body.data?.cv
+  ) {
+    throw new EcoleDirecteError(
+      answer.body.message || "Réponse QCM refusée.",
+      answer.body.code,
+      401,
+    );
   }
 
-  const gtkResponse = await fetch(
-    `${BASE_URL}/login.awp?gtk=1&v=${encodeURIComponent(API_VERSION)}`,
-    { headers: { "User-Agent": USER_AGENT }, cache: "no-store" },
-  );
-  const gtk = extractGtk(gtkResponse);
-  if (!gtk) throw new EcoleDirecteError("EcoleDirecte n’a pas fourni le cookie GTK.");
+  /**
+   * Étape 2 : nouveau bootstrap GTK avant le login final.
+   */
+  const initial = await bootstrap();
 
-  const result = await request<{ accounts: EcoleDirecteAccount[] }>(
-    "/login.awp",
+  /**
+   * Certains environnements font tourner les tokens/cookies
+   * pendant la séquence 2FA. On utilise donc les nouvelles
+   * informations retournées par le bootstrap pour le login final.
+   */
+  const result = await request<{
+    accounts: EcoleDirecteAccount[];
+  }>("/login.awp", {
+    method: "POST",
+    gtk: initial.gtk,
+    cookie: initial.cookie,
+    data: {
+      identifiant,
+      motdepasse,
+      isRelogin: false,
+      uuid: "",
+
+      // Format documenté.
+      cn: answer.body.data.cn,
+      cv: answer.body.data.cv,
+
+      // Format actuellement utilisé par les implémentations
+      // récentes et accepté par notre flux validé.
+      fa: [
+        {
+          cn: answer.body.data.cn,
+          cv: answer.body.data.cv,
+          uniq: false,
+        },
+      ],
+    },
+  });
+
+  if (
+    result.body.code !== 200 ||
+    !result.body.token ||
+    !result.body.data?.accounts?.length
+  ) {
+    throw new EcoleDirecteError(
+      result.body.message ||
+        "La seconde connexion EcoleDirecte a échoué.",
+      result.body.code,
+      401,
+    );
+  }
+
+  return {
+    token: result.body.token,
+    account: selectAccount(result.body.data.accounts),
+  };
+}
+
+export function getSchedule(
+  token: string,
+  studentId: number,
+  dateStart: string,
+  dateEnd: string,
+) {
+  return request<EcoleDirecteScheduleItem[]>(
+    `/E/${studentId}/emploidutemps.awp`,
     {
       method: "POST",
-      gtk,
+      xToken: token,
       data: {
-        identifiant,
-        motdepasse,
-        isRelogin: false,
-        uuid: "",
-        fa: [{ cn: answer.data.cn, cv: answer.data.cv }],
+        dateDebut: dateStart,
+        dateFin: dateEnd,
+        avecTrous: false,
       },
     },
   );
-
-  if (result.code !== 200 || !result.token || !result.data?.accounts?.length) {
-    throw new EcoleDirecteError(result.message || "La seconde connexion EcoleDirecte a échoué.", result.code, 401);
-  }
-
-  const account =
-    result.data.accounts.find((item) => item.typeCompte === "E") ||
-    result.data.accounts[0];
-
-  return { token: result.token, account };
 }
 
-export function getSchedule(token: string, studentId: number, dateStart: string, dateEnd: string) {
-  return request<EcoleDirecteScheduleItem[]>(
-    `/E/${studentId}/emploidutemps.awp`,
-    { method: "POST", token, data: { dateDebut: dateStart, dateFin: dateEnd, avecTrous: false } },
-  );
-}
-
-export function getHomeworkIndex(token: string, studentId: number) {
+export function getHomeworkIndex(
+  token: string,
+  studentId: number,
+) {
   return request<EcoleDirecteHomeworkIndex>(
     `/Eleves/${studentId}/cahierdetexte.awp`,
-    { method: "GET", token },
+    {
+      method: "GET",
+      xToken: token,
+    },
   );
 }
 
-export function getHomeworkDetail(token: string, studentId: number, date: string) {
+export function getHomeworkDetail(
+  token: string,
+  studentId: number,
+  date: string,
+) {
   return request<EcoleDirecteHomeworkDetail>(
     `/Eleves/${studentId}/cahierdetexte/${date}.awp`,
-    { method: "GET", token },
+    {
+      method: "GET",
+      xToken: token,
+    },
   );
 }
