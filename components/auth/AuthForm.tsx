@@ -44,15 +44,19 @@ export default function AuthForm({ nextPath }: { nextPath: string }) {
       <p className="auth-intro">Utilise tes identifiants <strong>École Directe</strong>. Ils sont transmis uniquement au serveur C-Cool pour la connexion à École Directe.</p>
       {!qcm ? (
         <>
-          <label>Identifiant École Directe<input required value={identifiant} onChange={(event) => setIdentifiant(event.target.value)} autoComplete="username" /></label>
-          <label>Mot de passe École Directe<input required type="password" value={motdepasse} onChange={(event) => setMotdepasse(event.target.value)} autoComplete="current-password" /></label>
+          <label htmlFor="ecole-directe-identifiant">Identifiant École Directe<input id="ecole-directe-identifiant" name="identifiant" required value={identifiant} onChange={(event) => setIdentifiant(event.target.value)} autoComplete="username" /></label>
+          <label htmlFor="ecole-directe-motdepasse">Mot de passe École Directe<input id="ecole-directe-motdepasse" name="motdepasse" required type="password" value={motdepasse} onChange={(event) => setMotdepasse(event.target.value)} autoComplete="current-password" /></label>
           {error && <p className="auth-error" role="alert">{error}</p>}
           {!isConfigured && <p className="auth-error">Firebase doit être configuré avant de pouvoir se connecter.</p>}
           <button className="auth-submit" disabled={pending || !isConfigured}>{pending ? "Connexion à École Directe…" : "Se connecter avec École Directe"}</button>
         </>
       ) : (
         <>
-          <p><strong>{qcm.question}</strong></p>
+          <div className="qcm-panel">
+  <p className="qcm-eyebrow">Vérification École Directe</p>
+  <p className="qcm-question"><strong>{qcm.question || "Réponds à la question de sécurité École Directe."}</strong></p>
+  <p className="qcm-help">Choisis la réponse correspondant à ta question de sécurité.</p>
+</div>
           <div className="qcm-options">
             {qcm.propositions.map((choice) => (
               <button key={choice.encoded} type="button" className="auth-submit" disabled={pending} onClick={() => void submitQcm(choice.encoded)}>
