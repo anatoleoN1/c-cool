@@ -354,7 +354,6 @@ export async function login(
       method: "GET",
       twoFaToken,
       cookie,
-      data: {},
     });
 
     cookie = challenge.session.cookie || cookie;
