@@ -1,6 +1,6 @@
 "use client";
 
-import { doc, setDoc } from "firebase/firestore";
+import { collection, doc, setDoc } from "firebase/firestore";
 import type { Contribution } from "@/types";
 import { getFirebaseClient } from "@/lib/firebase/client";
 import { FirestoreRepository } from "./base";
@@ -14,8 +14,9 @@ export class ContributionRepository extends FirestoreRepository<Contribution> {
     const services = getFirebaseClient();
     if (!services) throw new Error("Firebase n'est pas configuré.");
 
-    const id = crypto.randomUUID();
-    await setDoc(doc(services.db, this.path, id), { id, ...data });
+    const ref = doc(collection(services.db, this.path));
+    const id = ref.id;
+    await setDoc(ref, { id, ...data });
     return id;
   }
 }
