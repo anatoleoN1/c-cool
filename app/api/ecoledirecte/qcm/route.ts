@@ -8,35 +8,174 @@ export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as { identifiant?: string; motdepasse?: string; choice?: string };
-    const pendingToken = (await cookies()).get("c_cool_ed_pending_token")?.value;
-    if (!body.identifiant || !body.motdepasse || !pendingToken || !body.choice) {
-      return NextResponse.json({ error: "Données QCM incomplètes." }, { status: 400 });
+    const body = (await request.json()) as {
+      identifiant?: string;
+      motdepasse?: string;
+      choice?: string;
+    };
+
+    const cookieStore = await cookies();
+
+    /*
+     * Toutes les informations sensibles de la session QCM
+     * restent côté serveur.
+     */
+    const pendingToken =
+      cookieStore.get(
+        "c_cool_ed_pending_token",
+      )?.value;
+
+    const pendingTwoFaToken =
+      cookieStore.get(
+        "c_cool_ed_pending_2fa",
+      )?.value;
+
+    const pendingCookieRaw =
+      cookieStore.get(
+        "c_cool_ed_pending_cookie",
+      )?.value;
+
+    const pendingCookie = pendingCookieRaw
+      ? decodeURIComponent(pendingCookieRaw)
+      : undefined;
+
+    if (
+      !body.identifiant?.trim() ||
+      !body.motdepasse ||
+      !pendingToken ||
+      !pendingTwoFaToken ||
+      !pendingCookie ||
+      !body.choice
+    ) {
+      return NextResponse.json(
+        {
+          error: "Données QCM incomplètes.",
+        },
+        { status: 400 },
+      );
     }
 
-    const result = await completeQcm(body.identifiant, body.motdepasse, pendingToken, body.choice);
+    /*
+     * Réponse au QCM puis re-login École Directe.
+     */
+    const result = await completeQcm(
+      body.identifiant.trim(),
+      body.motdepasse,
+      pendingToken,
+      pendingTwoFaToken,
+      pendingCookie,
+      body.choice,
+    );
+
     const account = result.account;
+
     const uid = `ed_${account.codeOgec}_${account.id}`;
-    const customToken = await createEcoleDirecteCustomToken(uid, account.codeOgec, String(account.id), account.typeCompte);
+
+    const customToken =
+      await createEcoleDirecteCustomToken(
+        uid,
+        account.codeOgec,
+        String(account.id),
+        account.typeCompte,
+      );
 
     const response = NextResponse.json({
       customToken,
       user: {
         uid,
-        displayName: [account.prenom, account.nom].filter(Boolean).join(" ") || account.identifiant || "Élève",
+        displayName:
+          [account.prenom, account.nom]
+            .filter(Boolean)
+            .join(" ") ||
+          account.identifiant ||
+          "Élève",
         email: account.email || null,
         schoolId: account.codeOgec,
-        schoolName: account.nomEtablissement || "Établissement",
+        schoolName:
+          account.nomEtablissement ||
+          "Établissement",
         edStudentId: account.id,
       },
     });
 
-    response.cookies.set("c_cool_ed_pending_token", "", { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 0 });
-    response.cookies.set("c_cool_ed_token", result.token, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
-    response.cookies.set("c_cool_ed_student", String(account.id), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
-    response.cookies.set("c_cool_ed_school", account.codeOgec, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/", maxAge: 604800 });
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      path: "/",
+    };
+
+    /*
+     * Les informations temporaires du QCM ne sont
+     * plus nécessaires après le re-login.
+     */
+    response.cookies.set(
+      "c_cool_ed_pending_token",
+      "",
+      {
+        ...cookieOptions,
+        maxAge: 0,
+      },
+    );
+
+    response.cookies.set(
+      "c_cool_ed_pending_2fa",
+      "",
+      {
+        ...cookieOptions,
+        maxAge: 0,
+      },
+    );
+
+    response.cookies.set(
+      "c_cool_ed_pending_cookie",
+      "",
+      {
+        ...cookieOptions,
+        maxAge: 0,
+      },
+    );
+
+    /*
+     * Session École Directe définitive.
+     */
+    response.cookies.set(
+      "c_cool_ed_token",
+      result.token,
+      {
+        ...cookieOptions,
+        maxAge: 604800,
+      },
+    );
+
+    response.cookies.set(
+      "c_cool_ed_student",
+      String(account.id),
+      {
+        ...cookieOptions,
+        maxAge: 604800,
+      },
+    );
+
+    response.cookies.set(
+      "c_cool_ed_school",
+      account.codeOgec,
+      {
+        ...cookieOptions,
+        maxAge: 604800,
+      },
+    );
+
     return response;
   } catch (error) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Validation QCM impossible." }, { status: 401 });
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error
+            ? error.message
+            : "Validation QCM impossible.",
+      },
+      { status: 401 },
+    );
   }
 }
