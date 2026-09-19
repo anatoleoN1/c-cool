@@ -565,6 +565,40 @@ a {
 .auth-submit { margin-top: 5px; padding: 12px; border: 0; border-radius: var(--radius-sm); background: var(--primary); color: white; font-weight: 700; }
 .auth-submit:disabled { cursor: not-allowed; opacity: 0.6; }
 .auth-error { margin: 0; color: var(--danger); font-size: 13px; line-height: 1.45; }
+.qcm-panel {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-soft);
+}
+.qcm-eyebrow {
+  margin: 0 0 7px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.qcm-question {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.qcm-help {
+  margin: 7px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.qcm-options {
+  display: grid;
+  gap: 9px;
+}
+.qcm-options .auth-submit {
+  margin-top: 0;
+  text-align: left;
+}
+
 
 /* =========================
    MOBILE
