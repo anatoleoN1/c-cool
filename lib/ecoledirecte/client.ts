@@ -527,7 +527,7 @@ export function getSchedule(
   dateStart: string,
   dateEnd: string,
 ) {
-  return request<EcoleDirecteScheduleItem[]>(
+  const result = await request<EcoleDirecteScheduleItem[]>(
     `/E/${studentId}/emploidutemps.awp`,
     {
       method: "POST",
@@ -540,6 +540,16 @@ export function getSchedule(
       },
     },
   );
+
+  if (result.body.code !== 200) {
+    throw new EcoleDirecteError(
+      result.body.message || "ÉcoleDirecte n'a pas pu récupérer l'emploi du temps.",
+      result.body.code,
+      result.body.code === 520 || result.body.code === 525 ? 401 : 502,
+    );
+  }
+
+  return result;
 }
 
 export async function getHomeworkIndex(
