@@ -521,7 +521,7 @@ export async function completeQcm(
   };
 }
 
-export function getSchedule(
+export async function getSchedule(
   token: string,
   studentId: number,
   dateStart: string,
