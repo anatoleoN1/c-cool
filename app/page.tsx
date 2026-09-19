@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/components/auth/AuthProvider";
 import type { EcoleDirecteHomeworkIndex, EcoleDirecteScheduleItem } from "@/lib/ecoledirecte/types";
 
 export default function Home() {
+  const { profile } = useAuth();
   const [schedule, setSchedule] = useState<EcoleDirecteScheduleItem[]>([]);
   const [homework, setHomework] = useState<EcoleDirecteHomeworkIndex>({});
   const [sessionError, setSessionError] = useState<string | null>(null);
@@ -31,7 +33,7 @@ export default function Home() {
 
   const upcomingHomework = Object.entries(homework)
     .flatMap(([date, items]) => items.map((item) => ({ date, item })))
-    .filter(({ item }) => !item.effectue)
+    .filter(({ item }) => profile?.preferences?.showCompletedHomework || !item.effectue)
     .slice(0, 4);
 
   const nextClasses = [...schedule]
