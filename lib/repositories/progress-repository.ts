@@ -30,16 +30,18 @@ export class ProgressRepository {
   async createMentalMathAttempt(attempt: Omit<import("@/types").MentalMathAttempt, "id">): Promise<string> {
     const services = getFirebaseClient();
     if (!services) throw new Error("Firebase n'est pas configuré.");
-    const id = crypto.randomUUID();
-    await setDoc(doc(services.db, this.userId, "mentalMathAttempts", id), { id, ...attempt });
+    const ref = doc(collection(services.db, "users", this.userId, "mentalMathAttempts"));
+    const id = ref.id;
+    await setDoc(ref, { id, ...attempt });
     return id;
   }
 
   async saveRevisionPlan(plan: Omit<RevisionPlan, "id">): Promise<string> {
     const services = getFirebaseClient();
     if (!services) throw new Error("Firebase n'est pas configuré.");
-    const id = crypto.randomUUID();
-    await setDoc(doc(services.db, this.userId, "revisionPlans", id), { id, ...plan });
+    const ref = doc(collection(services.db, "users", this.userId, "revisionPlans"));
+    const id = ref.id;
+    await setDoc(ref, { id, ...plan });
     return id;
   }
 }
