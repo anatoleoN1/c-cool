@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
+import { useAuth } from "@/components/auth/AuthProvider";
 import type { EcoleDirecteHomeworkIndex } from "@/lib/ecoledirecte/types";
 
 export default function DevoirsPage() {
+  const { profile } = useAuth();
   const [homework, setHomework] = useState<EcoleDirecteHomeworkIndex>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export default function DevoirsPage() {
           {dates.map((date) => (
             <div key={date}>
               <p className="section-label">{new Date(`${date}T12:00:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</p>
-              {homework[date].map((item) => (
+              {homework[date].filter((item) => profile?.preferences?.showCompletedHomework || !item.effectue).map((item) => (
                 <article className="exercise-row" key={item.idDevoir}>
                   <div>
                     <span className="todo-subject">{item.matiere || item.codeMatiere || "Matière"}</span>
