@@ -373,9 +373,11 @@ export async function login(
       question: string;
       propositions: string[];
     }>("/connexion/doubleauth.awp", {
-      method: "GET",
+      method: "POST",
       twoFaToken,
       cookie,
+      query: { verbe: "get" },
+      data: {},
     });
 
     cookie = challenge.session.cookie || cookie;
@@ -444,6 +446,7 @@ export async function completeQcm(
     method: "POST",
     twoFaToken: pendingTwoFaToken,
     cookie: pendingCookie,
+    query: { verbe: "post" },
     data: {
       choix: encodedChoice,
     },
