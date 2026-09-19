@@ -1,39 +1,53 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ProgressRepository } from "@/lib/repositories/progress-repository";
 import {
   generateMentalMathQuestions,
-  type MentalMathFormat,
-  type MentalMathOperation,
+  type MentalMathCategory,
   type MentalMathQuestion,
 } from "@/lib/algorithms/mental-math";
 
-const OPERATION_LABELS: Record<MentalMathOperation, string> = {
-  addition: "Additions",
-  subtraction: "Soustractions",
-  multiplication: "Multiplications",
-  division: "Divisions",
-};
-
-const FORMAT_LABELS: Record<MentalMathFormat, string> = {
-  direct: "Calcul direct",
-  "missing-left": "Nombre manquant à gauche",
-  "missing-right": "Nombre manquant à droite",
-  division: "Divisions",
-};
+const GROUPS: Array<{
+  title: string;
+  items: Array<{ value: MentalMathCategory; label: string; description: string }>;
+}> = [
+  {
+    title: "Fondamentaux",
+    items: [
+      { value: "addition", label: "Additions", description: "Calculer rapidement des sommes" },
+      { value: "subtraction", label: "Soustractions", description: "Écarts et calculs à trous" },
+      { value: "multiplication", label: "Multiplications", description: "Tables et produits" },
+      { value: "division", label: "Divisions", description: "Divisions exactes" },
+    ],
+  },
+  {
+    title: "Techniques",
+    items: [
+      { value: "complements", label: "Compléments", description: "Compléter vers 10, 100, 1 000" },
+      { value: "decimals", label: "Décimaux", description: "Calculs avec virgule" },
+      { value: "fractions", label: "Fractions", description: "Sommes de fractions simples" },
+      { value: "percentages", label: "Pourcentages", description: "Pourcentages usuels" },
+    ],
+  },
+  {
+    title: "Lycée",
+    items: [
+      { value: "powers", label: "Puissances", description: "Carrés et petites puissances" },
+      { value: "signed", label: "Nombres relatifs", description: "Signes et opérations" },
+      { value: "priorities", label: "Priorités", description: "Calculs avec × avant +" },
+      { value: "mixed", label: "Mix complet", description: "Un parcours de tout le catalogue" },
+    ],
+  },
+];
 
 export default function CalculMentalPage() {
   const { user, profile } = useAuth();
-  const [operations, setOperations] = useState<MentalMathOperation[]>([
-    "addition",
-    "subtraction",
-    "multiplication",
-  ]);
-  const [format, setFormat] = useState<MentalMathFormat>("direct");
-  const [count, setCount] = useState(10);
+  const [category, setCategory] = useState<MentalMathCategory>("mixed");
+  const [difficulty, setDifficulty] = useState(2);
+  const [count, setCount] = useState(15);
   const [questions, setQuestions] = useState<MentalMathQuestion[]>([]);
   const [current, setCurrent] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -44,15 +58,15 @@ export default function CalculMentalPage() {
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [questionStartedAt, setQuestionStartedAt] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
+  const [bestTime, setBestTime] = useState<number | null>(null);
+
+  const selectedLabel = useMemo(
+    () => GROUPS.flatMap((group) => group.items).find((item) => item.value === category)?.label || "Mix complet",
+    [category],
+  );
 
   const startSession = useCallback(() => {
-    const generated = generateMentalMathQuestions({
-      operations,
-      formats: [format],
-      min: 1,
-      max: 12,
-      count,
-    });
+    const generated = generateMentalMathQuestions({ category, difficulty, count });
     const now = Date.now();
     setQuestions(generated);
     setCurrent(0);
@@ -64,33 +78,20 @@ export default function CalculMentalPage() {
     setStartedAt(now);
     setQuestionStartedAt(now);
     setElapsed(0);
-  }, [count, format, operations]);
+  }, [category, count, difficulty]);
 
   useEffect(() => {
     if (!started || finished || startedAt === null) return;
-    const timer = window.setInterval(() => {
-      setElapsed((Date.now() - startedAt) / 1000);
-    }, 100);
+    const timer = window.setInterval(() => setElapsed((Date.now() - startedAt) / 1000), 100);
     return () => window.clearInterval(timer);
   }, [finished, started, startedAt]);
 
-  function toggleOperation(operation: MentalMathOperation) {
-    setOperations((currentOperations) => {
-      if (currentOperations.includes(operation)) {
-        return currentOperations.length === 1
-          ? currentOperations
-          : currentOperations.filter((item) => item !== operation);
-      }
-      return [...currentOperations, operation];
-    });
-  }
-
-  async function submitAnswer(event: React.FormEvent) {
+  function submitAnswer(event: React.FormEvent) {
     event.preventDefault();
     if (!questions[current] || feedback) return;
 
     const value = Number(answer.replace(",", "."));
-    const isCorrect = Number.isFinite(value) && value === questions[current].answer;
+    const isCorrect = Number.isFinite(value) && Math.abs(value - questions[current].answer) < 0.0001;
     const responseTimeMs = questionStartedAt === null ? 0 : Date.now() - questionStartedAt;
     const schoolId = profile?.activeSchoolIds[0];
 
@@ -101,7 +102,7 @@ export default function CalculMentalPage() {
         schoolId,
         operation: questions[current].operation,
         format: questions[current].format,
-        difficulty: 1,
+        difficulty,
         question: questions[current].text,
         answer,
         expectedAnswer: String(questions[current].answer),
@@ -120,124 +121,119 @@ export default function CalculMentalPage() {
 
     window.setTimeout(() => {
       if (current + 1 >= questions.length) {
+        const finalElapsed = startedAt === null ? elapsed : (Date.now() - startedAt) / 1000;
+        setElapsed(finalElapsed);
         setFinished(true);
         setStarted(false);
         setFeedback(null);
+        setBestTime((previous) => previous === null ? finalElapsed : Math.min(previous, finalElapsed));
         return;
       }
-      const nextStartedAt = Date.now();
+
       setCurrent((index) => index + 1);
       setAnswer("");
       setFeedback(null);
-      setQuestionStartedAt(nextStartedAt);
-    }, 550);
+      setQuestionStartedAt(Date.now());
+    }, 450);
   }
 
   const currentQuestion = questions[current];
-  const percentage = questions.length ? Math.round((correct / questions.length) * 100) : 0;
+  const finalScore = questions.length ? Math.round((correct / questions.length) * 100) : 0;
 
   return (
     <AppShell>
-      <div className="page-content">
-        <p className="section-label">Entraînement</p>
-        <h2 className="page-title">Calcul mental</h2>
-        <p className="page-description">
-          Entraîne-toi avec des calculs courts, puis mesure ta progression.
-        </p>
+      <div className="page-content mental-page">
+        <div className="mental-hero">
+          <div>
+            <p className="section-label">Entraînement</p>
+            <h2 className="page-title">Calcul mental</h2>
+            <p className="page-description">Des automatismes courts, organisés par compétence, avec difficulté progressive et suivi de tes performances.</p>
+          </div>
+          <div className="mental-stats">
+            <span><strong>{bestTime === null ? "—" : `${bestTime.toFixed(1)}s`}</strong> meilleur temps</span>
+            <span><strong>{difficulty}/5</strong> difficulté</span>
+          </div>
+        </div>
 
         {!started && !finished && (
-          <section className="mental-panel" aria-label="Configuration du calcul mental">
-            <div className="mental-heading">
-              <div>
-                <p className="section-label">Nouvelle série</p>
-                <h3>Choisis ton entraînement</h3>
+          <>
+            <section className="section mental-catalog">
+              <div className="section-heading">
+                <div><p className="section-label">Catalogue</p><h2>Choisis ton entraînement</h2></div>
+                <span className="mental-count">{selectedLabel}</span>
               </div>
-              <span className="mental-count">{count} questions</span>
-            </div>
 
-            <div className="mental-options">
+              {GROUPS.map((group) => (
+                <div className="mental-group" key={group.title}>
+                  <div className="mental-group-title"><strong>{group.title}</strong><span>{group.items.length} activités</span></div>
+                  <div className="mental-catalog-grid">
+                    {group.items.map((item) => (
+                      <button
+                        type="button"
+                        key={item.value}
+                        className={category === item.value ? "mental-activity selected" : "mental-activity"}
+                        onClick={() => setCategory(item.value)}
+                      >
+                        <span className="mental-activity-icon">∑</span>
+                        <span><strong>{item.label}</strong><small>{item.description}</small></span>
+                        {category === item.value && <b>✓</b>}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section className="section mental-settings">
               <div>
-                <p className="mental-label">Opérations</p>
-                <div className="mental-chips">
-                  {(Object.keys(OPERATION_LABELS) as MentalMathOperation[]).map((operation) => (
-                    <button
-                      key={operation}
-                      type="button"
-                      className={`mental-chip ${operations.includes(operation) ? "selected" : ""}`}
-                      onClick={() => toggleOperation(operation)}
-                    >
-                      {OPERATION_LABELS[operation]}
+                <span className="mental-label">Difficulté</span>
+                <div className="difficulty-row">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button type="button" key={value} className={difficulty === value ? "difficulty selected" : "difficulty"} onClick={() => setDifficulty(value)}>
+                      <strong>{value}</strong><small>{["Début", "Facile", "Intermédiaire", "Avancé", "Expert"][value - 1]}</small>
                     </button>
                   ))}
                 </div>
               </div>
-
-              <label className="mental-select">
-                <span className="mental-label">Format</span>
-                <select value={format} onChange={(event) => setFormat(event.target.value as MentalMathFormat)}>
-                  <option value="direct">Calcul direct</option>
-                  <option value="missing-left">Nombre manquant à gauche</option>
-                  <option value="missing-right">Nombre manquant à droite</option>
-                  <option value="division">Division</option>
-                </select>
-              </label>
-
-              <label className="mental-select">
-                <span className="mental-label">Questions</span>
+              <label className="mental-select"><span className="mental-label">Questions</span>
                 <select value={count} onChange={(event) => setCount(Number(event.target.value))}>
-                  <option value={5}>5</option>
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={30}>30</option>
+                  {[5, 10, 15, 20, 30, 50].map((value) => <option value={value} key={value}>{value}</option>)}
                 </select>
               </label>
-            </div>
+            </section>
 
-            <button className="mental-start" type="button" onClick={startSession}>
-              Commencer la série <span>→</span>
+            <button className="mental-start mental-start-wide" type="button" onClick={startSession}>
+              Commencer « {selectedLabel} » <span>→</span>
             </button>
-          </section>
+          </>
         )}
 
         {started && currentQuestion && (
-          <section className="mental-play" aria-label="Série de calcul mental">
+          <section className="mental-play">
             <div className="mental-progress-row">
               <span>{current + 1} / {questions.length}</span>
-              <span>{elapsed.toFixed(1)} s</span>
+              <span>{Math.floor(elapsed / 60).toString().padStart(2, "0")}:{Math.floor(elapsed % 60).toString().padStart(2, "0")}</span>
             </div>
-            <div className="mental-progress">
-              <span style={{ width: `${((current + 1) / questions.length) * 100}%` }} />
-            </div>
-
-            <div className={`mental-question ${feedback ?? ""}`}>
-              <p className="mental-label">{FORMAT_LABELS[currentQuestion.format]}</p>
-              <strong>{currentQuestion.text}</strong>
-              <form onSubmit={submitAnswer}>
-                <input
-                  autoFocus
-                  inputMode="numeric"
-                  value={answer}
-                  onChange={(event) => setAnswer(event.target.value)}
-                  placeholder="Ta réponse"
-                  aria-label="Réponse"
-                  disabled={Boolean(feedback)}
-                />
-                <button type="submit" disabled={!answer || Boolean(feedback)}>Valider</button>
-              </form>
-              {feedback === "correct" && <p className="mental-feedback">✓ Correct</p>}
-              {feedback === "wrong" && <p className="mental-feedback">Pas cette fois — la réponse était {currentQuestion.answer}.</p>}
-            </div>
+            <div className="mental-progress"><span style={{ width: `${((current + 1) / questions.length) * 100}%` }} /></div>
+            <p className="mental-play-category">{selectedLabel} · niveau {difficulty}</p>
+            <div className="mental-question">{currentQuestion.text}</div>
+            <form onSubmit={submitAnswer} className="mental-answer-form">
+              <input autoFocus inputMode="decimal" value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder="Ta réponse" aria-label="Réponse" />
+              <button className="mental-start" type="submit">Valider <span>↵</span></button>
+            </form>
+            {feedback && <p className={feedback === "correct" ? "mental-feedback correct" : "mental-feedback wrong"}>{feedback === "correct" ? "Correct ✓" : `Pas tout à fait — ${currentQuestion.answer}`}</p>}
           </section>
         )}
 
         {finished && (
-          <section className="mental-result" aria-label="Résultat">
+          <section className="mental-result">
             <p className="section-label">Série terminée</p>
-            <h3>{correct} / {questions.length}</h3>
-            <p>{percentage}% de réussite · {elapsed.toFixed(1)} secondes</p>
-            <button className="mental-start" type="button" onClick={startSession}>
-              Recommencer <span>↻</span>
-            </button>
+            <h2>{finalScore}%</h2>
+            <p>{correct} bonne{correct > 1 ? "s" : ""} réponse{correct > 1 ? "s" : ""} sur {questions.length} · {elapsed.toFixed(1)} secondes.</p>
+            <div className="mental-result-actions">
+              <button className="mental-start" type="button" onClick={startSession}>Rejouer <span>↻</span></button>
+              <button className="text-button" type="button" onClick={() => { setFinished(false); setQuestions([]); }}>Changer d&apos;activité</button>
+            </div>
           </section>
         )}
       </div>
