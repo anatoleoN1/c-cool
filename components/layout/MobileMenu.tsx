@@ -31,43 +31,26 @@ export default function MobileMenu() {
 
   return (
     <>
-      <button
-        className="mobile-menu"
-        aria-label="Ouvrir le menu"
-        onClick={() => setOpen(true)}
-      >
+      <button className="mobile-menu" aria-label="Ouvrir le menu" onClick={() => setOpen(true)}>
         ☰
       </button>
 
       {open && (
         <div className="mobile-overlay" onClick={() => setOpen(false)}>
-          <aside
-            className="mobile-drawer"
-            onClick={(event) => event.stopPropagation()}
-          >
+          <aside className="mobile-drawer" onClick={(event) => event.stopPropagation()}>
             <div className="mobile-drawer-header">
               <div className="brand">
                 <div className="brand-mark">C</div>
                 <span>C-Cool</span>
               </div>
-
-              <button
-                className="mobile-close"
-                aria-label="Fermer le menu"
-                onClick={() => setOpen(false)}
-              >
+              <button className="mobile-close" aria-label="Fermer le menu" onClick={() => setOpen(false)}>
                 ×
               </button>
             </div>
 
             <nav className="navigation">
               {navigation.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="nav-item"
-                  onClick={() => setOpen(false)}
-                >
+                <Link key={item.href} href={item.href} className="nav-item" onClick={() => setOpen(false)}>
                   <span className="nav-icon">{item.icon}</span>
                   <span>{item.label}</span>
                 </Link>
@@ -81,13 +64,8 @@ export default function MobileMenu() {
               <Link href="/contribuer" className="nav-item" onClick={() => setOpen(false)}>
                 <span className="nav-icon">＋</span><span>Contribuer</span>
               </Link>
-              <Link
-                href="/parametres"
-                className="nav-item"
-                onClick={() => setOpen(false)}
-              >
-                <span className="nav-icon">⚙</span>
-                <span>Paramètres</span>
+              <Link href="/parametres" className="nav-item" onClick={() => setOpen(false)}>
+                <span className="nav-icon">⚙</span><span>Paramètres</span>
               </Link>
             </nav>
           </aside>
