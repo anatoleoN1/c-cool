@@ -542,31 +542,54 @@ export function getSchedule(
   );
 }
 
-export function getHomeworkIndex(
+export async function getHomeworkIndex(
   token: string,
   studentId: number,
 ) {
-  return request<EcoleDirecteHomeworkIndex>(
+  const result = await request<EcoleDirecteHomeworkIndex>(
     `/Eleves/${studentId}/cahierdetexte.awp`,
     {
       method: "POST",
       xToken: token,
       query: { verbe: "get" },
+      // ÉcoleDirecte attend un payload JSON, même vide, sur cette route.
+      data: {},
     },
   );
+
+  if (result.body.code !== 200) {
+    throw new EcoleDirecteError(
+      result.body.message || "ÉcoleDirecte n'a pas pu récupérer le cahier de texte.",
+      result.body.code,
+      502,
+    );
+  }
+
+  return result;
 }
 
-export function getHomeworkDetail(
+export async function getHomeworkDetail(
   token: string,
   studentId: number,
   date: string,
 ) {
-  return request<EcoleDirecteHomeworkDetail>(
+  const result = await request<EcoleDirecteHomeworkDetail>(
     `/Eleves/${studentId}/cahierdetexte/${date}.awp`,
     {
       method: "POST",
       xToken: token,
       query: { verbe: "get" },
+      data: {},
     },
   );
+
+  if (result.body.code !== 200) {
+    throw new EcoleDirecteError(
+      result.body.message || "ÉcoleDirecte n'a pas pu récupérer le détail du devoir.",
+      result.body.code,
+      502,
+    );
+  }
+
+  return result;
 }
