@@ -10,7 +10,6 @@ const navigation = [
   { href: "/cours", label: "Cours", icon: "▤" },
   { href: "/exercices", label: "Exercices", icon: "✓" },
   { href: "/devoirs", label: "Devoirs", icon: "☑" },
-  { href: "/devoirs", label: "Devoirs", icon: "☑" },
   { href: "/revisions", label: "Révisions", icon: "↻" },
   { href: "/evaluations", label: "Évaluations", icon: "◇" },
   { href: "/calcul-mental", label: "Calcul mental", icon: "∑" },
@@ -60,9 +59,7 @@ export default function Sidebar() {
         </Link>
         <Link
           href="/parametres"
-          className={`nav-item ${
-            pathname.startsWith("/parametres") ? "active" : ""
-          }`}
+          className={`nav-item ${pathname.startsWith("/parametres") ? "active" : ""}`}
         >
           <span className="nav-icon">⚙</span>
           <span>Paramètres</span>
