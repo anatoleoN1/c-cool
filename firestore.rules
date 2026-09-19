@@ -49,6 +49,15 @@ service cloud.firestore {
           && officialCollection in ['subjects', 'chapters', 'officialCourses', 'officialHomework', 'officialAssessments', 'officialExercises', 'officialCorrections', 'officialResources', 'officialSchedule'];
       }
 
+
+      match /classMessages/{messageId} {
+        allow read: if isMember(schoolId);
+        allow create: if isMember(schoolId)
+          && request.resource.data.authorId == request.auth.uid
+          && request.resource.data.schoolId == schoolId;
+        allow update, delete: if false;
+      }
+
       match /contributions/{contributionId} {
         allow read: if isMember(schoolId) && (resource.data.authorId == request.auth.uid || isModerator());
         allow create: if isMember(schoolId)
