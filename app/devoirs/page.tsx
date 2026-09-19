@@ -14,6 +14,7 @@ export default function DevoirsPage() {
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Impossible de récupérer les devoirs.");
+        if (!data.data || typeof data.data !== "object" || Array.isArray(data.data)) throw new Error("La session ÉcoleDirecte a expiré. Reconnecte-toi.");
         return data.data as EcoleDirecteHomeworkIndex;
       })
       .then((data) => setHomework(data || {}))
