@@ -8,6 +8,7 @@ import type { EcoleDirecteHomeworkIndex, EcoleDirecteScheduleItem } from "@/lib/
 export default function Home() {
   const [schedule, setSchedule] = useState<EcoleDirecteScheduleItem[]>([]);
   const [homework, setHomework] = useState<EcoleDirecteHomeworkIndex>({});
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   useEffect(() => {
     const today = new Date();
@@ -20,6 +21,11 @@ export default function Home() {
     ]).then(([scheduleData, homeworkData]) => {
       if (Array.isArray(scheduleData?.data)) setSchedule(scheduleData.data);
       if (homeworkData?.data && typeof homeworkData.data === "object" && !Array.isArray(homeworkData.data)) setHomework(homeworkData.data);
+      if (!scheduleData && !homeworkData) {
+        setSessionError("La session École Directe a expiré. Reconnecte-toi pour actualiser tes données.");
+      } else if (scheduleData?.error || homeworkData?.error) {
+        setSessionError(scheduleData?.error || homeworkData?.error || "École Directe est momentanément indisponible.");
+      }
     });
   }, []);
 
@@ -41,6 +47,8 @@ export default function Home() {
           <h2>Bonjour 👋</h2>
           <p>Voici ce qui compte maintenant : tes cours, tes devoirs et tes révisions.</p>
         </section>
+
+        {sessionError && <p className="auth-error" role="alert">{sessionError}</p>}
 
         <section className="dashboard-grid">
           <Link href="/agenda" className="feature-card">
