@@ -532,6 +532,7 @@ export function getSchedule(
     {
       method: "POST",
       xToken: token,
+      query: { verbe: "get" },
       data: {
         dateDebut: dateStart,
         dateFin: dateEnd,
@@ -548,8 +549,9 @@ export function getHomeworkIndex(
   return request<EcoleDirecteHomeworkIndex>(
     `/Eleves/${studentId}/cahierdetexte.awp`,
     {
-      method: "GET",
+      method: "POST",
       xToken: token,
+      query: { verbe: "get" },
     },
   );
 }
@@ -562,8 +564,9 @@ export function getHomeworkDetail(
   return request<EcoleDirecteHomeworkDetail>(
     `/Eleves/${studentId}/cahierdetexte/${date}.awp`,
     {
-      method: "GET",
+      method: "POST",
       xToken: token,
+      query: { verbe: "get" },
     },
   );
 }
