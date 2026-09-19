@@ -42,11 +42,23 @@ function initializeClientAppCheck(app: FirebaseApp): AppCheck | null {
   if (typeof window === "undefined" || !appCheckKey) return null;
   if (appCheckInstance) return appCheckInstance;
 
-  const isLocalDevelopment =
-    process.env.NODE_ENV === "development" &&
-    window.location.hostname === "localhost";
+  /*
+   * En développement, C-Cool peut être ouvert depuis le Raspberry Pi
+   * via son IP LAN (ex. 192.168.x.x). Une clé reCAPTCHA Enterprise
+   * configurée pour Firebase App Check ne valide pas forcément cette
+   * origine. On désactive donc App Check par défaut en développement.
+   *
+   * Pour le tester volontairement en dev :
+   * NEXT_PUBLIC_FIREBASE_APPCHECK_IN_DEV=true
+   */
+  const appCheckInDevelopment =
+    process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_IN_DEV === "true";
 
-  if (isLocalDevelopment) {
+  if (process.env.NODE_ENV === "development" && !appCheckInDevelopment) {
+    return null;
+  }
+
+  if (process.env.NODE_ENV === "development") {
     const debugScope = globalThis as typeof globalThis & {
       FIREBASE_APPCHECK_DEBUG_TOKEN?: boolean;
     };
