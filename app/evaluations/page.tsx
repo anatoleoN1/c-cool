@@ -29,7 +29,7 @@ export default function EvaluationsPage() {
 
     let cancelled = false;
 
-    void Promise.all([
+    void Promise.allSettled([
       new AssessmentRepository(schoolId).listPublished(),
       fetch("/api/ecoledirecte/session?kind=homework").then(async (response) => {
         const data = await response.json();
@@ -37,29 +37,30 @@ export default function EvaluationsPage() {
         return data.data as EcoleDirecteHomeworkIndex;
       }),
     ])
-      .then(([cCoolItems, homework]) => {
+      .then(([cCoolResult, edResult]) => {
         if (cancelled) return;
 
-        setAssessments(cCoolItems);
+        if (cCoolResult.status === "fulfilled") {
+          setAssessments(cCoolResult.value);
+        }
 
-        const items: EvaluationItem[] = Object.entries(homework || {}).flatMap(([date, entries]) =>
-          entries
-            .filter((entry) => entry.interrogation === true)
-            .map((entry) => ({
-              id: `ed-${entry.idDevoir}-${date}`,
-              subject: entry.matiere || entry.codeMatiere || "Matière",
-              title: "Interrogation",
-              date,
-              source: "École Directe",
-            })),
-        );
-
-        setEdEvaluations(items);
-        setError(null);
-      })
-      .catch((caught) => {
-        if (!cancelled) {
-          setError(caught instanceof Error ? caught.message : "Impossible de charger les évaluations.");
+        if (edResult.status === "fulfilled") {
+          const homework = edResult.value;
+          const items: EvaluationItem[] = Object.entries(homework || {}).flatMap(([date, entries]) =>
+            entries
+              .filter((entry) => entry.interrogation === true)
+              .map((entry) => ({
+                id: `ed-${entry.idDevoir}-${date}`,
+                subject: entry.matiere || entry.codeMatiere || "Matière",
+                title: "Interrogation",
+                date,
+                source: "École Directe",
+              })),
+          );
+          setEdEvaluations(items);
+        } else {
+          const reason = edResult.reason;
+          setError(reason instanceof Error ? reason.message : "Les interrogations École Directe sont momentanément indisponibles.");
         }
       })
       .finally(() => {
