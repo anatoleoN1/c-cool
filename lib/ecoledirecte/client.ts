@@ -571,7 +571,7 @@ export async function getHomeworkIndex(
     throw new EcoleDirecteError(
       result.body.message || "ÉcoleDirecte n'a pas pu récupérer le cahier de texte.",
       result.body.code,
-      502,
+      result.body.code === 520 || result.body.code === 525 ? 401 : 502,
     );
   }
 
@@ -597,7 +597,7 @@ export async function getHomeworkDetail(
     throw new EcoleDirecteError(
       result.body.message || "ÉcoleDirecte n'a pas pu récupérer le détail du devoir.",
       result.body.code,
-      502,
+      result.body.code === 520 || result.body.code === 525 ? 401 : 502,
     );
   }
 
