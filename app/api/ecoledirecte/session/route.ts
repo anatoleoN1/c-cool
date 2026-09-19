@@ -43,9 +43,26 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ error: "Ressource inconnue." }, { status: 404 });
   } catch (error) {
-    return NextResponse.json(
+    const status = error instanceof Error && "status" in error
+      ? Number((error as { status?: number }).status)
+      : 401;
+    const response = NextResponse.json(
       { error: error instanceof Error ? error.message : "Session EcoleDirecte indisponible." },
-      { status: 401 },
+      { status: status >= 400 && status < 600 ? status : 401 },
     );
+
+    if (status === 401) {
+      for (const name of ["c_cool_ed_token", "c_cool_ed_student", "c_cool_ed_school"]) {
+        response.cookies.set(name, "", {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+          path: "/",
+          maxAge: 0,
+        });
+      }
+    }
+
+    return response;
   }
 }
