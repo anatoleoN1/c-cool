@@ -24,7 +24,7 @@ export default function DevoirsPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const dates = Object.keys(homework).sort();
+  const dates = Object.keys(homework).filter((date) => homework[date].some((item) => profile?.preferences?.showCompletedHomework || !item.effectue)).sort();
 
   return (
     <AppShell>
