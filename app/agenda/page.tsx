@@ -12,7 +12,12 @@ function startOfWeek(date: Date) {
   d.setHours(12, 0, 0, 0);
   return d;
 }
-function iso(date: Date) { return date.toISOString().slice(0, 10); }
+function iso(date: Date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
 function label(date: Date) {
   return date.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
 }
@@ -31,6 +36,7 @@ export default function AgendaPage() {
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Impossible de récupérer l’agenda.");
+        if (!Array.isArray(data.data)) throw new Error("La session ÉcoleDirecte a expiré. Reconnecte-toi.");
         return data.data as EcoleDirecteScheduleItem[];
       })
       .then((data) => { if (!cancelled) { setItems(data || []); setError(null); } })
