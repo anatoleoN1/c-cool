@@ -18,8 +18,8 @@ export default function Home() {
       fetch(`/api/ecoledirecte/session?kind=schedule&start=${iso(today)}&end=${iso(end)}`).then((r) => r.ok ? r.json() : null),
       fetch("/api/ecoledirecte/session?kind=homework").then((r) => r.ok ? r.json() : null),
     ]).then(([scheduleData, homeworkData]) => {
-      if (scheduleData?.data) setSchedule(scheduleData.data);
-      if (homeworkData?.data) setHomework(homeworkData.data);
+      if (Array.isArray(scheduleData?.data)) setSchedule(scheduleData.data);
+      if (homeworkData?.data && typeof homeworkData.data === "object" && !Array.isArray(homeworkData.data)) setHomework(homeworkData.data);
     });
   }, []);
 
