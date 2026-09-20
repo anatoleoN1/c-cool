@@ -178,6 +178,37 @@ export async function POST(request: Request) {
       },
     );
 
+    response.cookies.set(
+      "c_cool_ed_school_name",
+      account.profile?.nomEtablissement || account.nomEtablissement || "",
+      { ...cookieOptions, maxAge: 604800 },
+    );
+    response.cookies.set(
+      "c_cool_ed_school_id",
+      account.profile?.idEtablissement || account.profile?.rneEtablissement || account.codeOgec || "",
+      { ...cookieOptions, maxAge: 604800 },
+    );
+    response.cookies.set(
+      "c_cool_ed_school_rne",
+      account.profile?.rneEtablissement || "",
+      { ...cookieOptions, maxAge: 604800 },
+    );
+    response.cookies.set(
+      "c_cool_ed_class_id",
+      String(account.profile?.classe?.id ?? ""),
+      { ...cookieOptions, maxAge: 604800 },
+    );
+    response.cookies.set(
+      "c_cool_ed_class_code",
+      account.profile?.classe?.code || "",
+      { ...cookieOptions, maxAge: 604800 },
+    );
+    response.cookies.set(
+      "c_cool_ed_class_name",
+      account.profile?.classe?.libelle || account.profile?.classe?.code || "",
+      { ...cookieOptions, maxAge: 604800 },
+    );
+
     return response;
   } catch (error) {
     return NextResponse.json(
