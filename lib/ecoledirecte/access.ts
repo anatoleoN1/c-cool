@@ -25,17 +25,21 @@ function csv(name: string): string[] {
     .filter(Boolean);
 }
 
-function getConfiguredRole(account: EcoleDirecteAccount): "student" | "moderator" | "admin" {
-  const uid = `ed_${account.codeOgec}_${account.id}`;
-  const ids = String(account.id);
-  const normalizedEmail = account.email ? normalize(account.email) : "";
+export function getConfiguredRoleForUid(
+  uid: string,
+  email?: string | null,
+): "student" | "moderator" | "admin" {
+  const ids = uid.startsWith("ed_")
+    ? uid.slice(uid.lastIndexOf("_") + 1)
+    : "";
+  const normalizedEmail = email ? normalize(email) : "";
 
   const adminIds = csv("CCOOL_ADMIN_ED_IDS");
   const adminUids = csv("CCOOL_ADMIN_UIDS");
   const adminEmails = csv("CCOOL_ADMIN_EMAILS").map(normalize);
 
   if (
-    adminIds.includes(ids) ||
+    (ids && adminIds.includes(ids)) ||
     adminUids.includes(uid) ||
     (!!normalizedEmail && adminEmails.includes(normalizedEmail))
   ) {
@@ -43,7 +47,7 @@ function getConfiguredRole(account: EcoleDirecteAccount): "student" | "moderator
   }
 
   const moderatorIds = csv("CCOOL_MODERATOR_ED_IDS");
-  if (moderatorIds.includes(ids) || moderatorIds.includes(uid)) {
+  if ((ids && moderatorIds.includes(ids)) || moderatorIds.includes(uid)) {
     return "moderator";
   }
 
@@ -52,39 +56,30 @@ function getConfiguredRole(account: EcoleDirecteAccount): "student" | "moderator
 
 function matchesConfiguredClass(classId: number | undefined): boolean {
   const configured = csv("CCOOL_ALLOWED_CLASS_ID");
-  if (configured.length === 0) {
-    return false;
-  }
-
+  if (configured.length === 0) return false;
   return configured.includes(String(classId ?? ""));
 }
 
 function matchesConfiguredSchool(rne: string): boolean {
   const configured = csv("CCOOL_ALLOWED_SCHOOL_RNE");
-  if (configured.length === 0) {
-    return false;
-  }
-
+  if (configured.length === 0) return false;
   return configured.includes(rne);
 }
 
-export function evaluateEcoleDirecteAccess(
-  account: EcoleDirecteAccount,
+export function evaluateConfiguredAccess(
+  uid: string,
+  schoolRne: string,
+  classId: number | undefined,
+  email?: string | null,
+  schoolName = "",
+  classCode = "",
+  classLabel = "",
 ): CcoolAccess {
-  const profile = account.profile;
-  const schoolName = profile?.nomEtablissement || account.nomEtablissement || "";
-  // L'ID établissement renvoyé par École Directe vaut ici "0".
-  // Le RNE est donc l'identifiant stable et exploitable pour l'établissement.
-  const schoolId = profile?.rneEtablissement || "";
-  const classId = profile?.classe?.id;
-  const classCode = profile?.classe?.code || "";
-  const classLabel = profile?.classe?.libelle || "";
-
-  const role = getConfiguredRole(account);
+  const role = getConfiguredRoleForUid(uid, email);
   const isAdmin = role === "admin";
   const allowed =
     role !== "student" ||
-    (matchesConfiguredSchool(schoolId) &&
+    (matchesConfiguredSchool(schoolRne) &&
       matchesConfiguredClass(classId));
 
   return {
@@ -92,10 +87,31 @@ export function evaluateEcoleDirecteAccess(
     isAdmin,
     role,
     schoolName,
-    schoolId,
+    schoolId: schoolRne,
     classCode,
     classLabel,
   };
+}
+
+export function evaluateEcoleDirecteAccess(
+  account: EcoleDirecteAccount,
+): CcoolAccess {
+  const profile = account.profile;
+  const schoolName = profile?.nomEtablissement || account.nomEtablissement || "";
+  const schoolId = profile?.rneEtablissement || "";
+  const classId = profile?.classe?.id;
+  const classCode = profile?.classe?.code || "";
+  const classLabel = profile?.classe?.libelle || "";
+
+  return evaluateConfiguredAccess(
+    `ed_${account.codeOgec}_${account.id}`,
+    schoolId,
+    classId,
+    account.email,
+    schoolName,
+    classCode,
+    classLabel,
+  );
 }
 
 export function accessDeniedMessage(): string {
