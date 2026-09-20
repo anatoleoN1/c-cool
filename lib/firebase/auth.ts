@@ -17,7 +17,14 @@ export type EcoleDirecteLoginResult =
 
 async function completeFirebaseLogin(payload: {
   customToken: string;
-  user: { displayName: string; email: string | null; schoolId: string };
+  user: {
+    displayName: string;
+    email: string | null;
+    schoolId: string;
+    classId?: number;
+    classCode?: string;
+    className?: string;
+  };
 }) {
   const services = getFirebaseClient();
   if (!services) throw new Error("Firebase n'est pas configuré.");
@@ -36,6 +43,9 @@ async function completeFirebaseLogin(payload: {
       id: credential.user.uid,
       email: payload.user.email || "",
       displayName: payload.user.displayName,
+      classId: payload.user.classId,
+      classCode: payload.user.classCode,
+      className: payload.user.className,
       role: "student",
       activeSchoolIds: [payload.user.schoolId],
       createdAt: now,
@@ -47,6 +57,9 @@ async function completeFirebaseLogin(payload: {
     await updateDoc(profileRef, {
       email: payload.user.email || "",
       displayName: payload.user.displayName,
+      classId: payload.user.classId,
+      classCode: payload.user.classCode,
+      className: payload.user.className,
       updatedAt: now,
       updatedBy: credential.user.uid,
     });
