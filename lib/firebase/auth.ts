@@ -7,7 +7,7 @@ import {
   updateProfile,
   type User as FirebaseUser,
 } from "firebase/auth";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import type { User } from "@/types";
 import { getFirebaseClient } from "./client";
 
@@ -29,8 +29,9 @@ async function completeFirebaseLogin(payload: {
 
   const profileRef = doc(services.db, "users", credential.user.uid);
   const existing = await getDoc(profileRef);
+  const now = new Date().toISOString();
+
   if (!existing.exists()) {
-    const now = new Date().toISOString();
     await setDoc(profileRef, {
       id: credential.user.uid,
       email: payload.user.email || "",
@@ -42,7 +43,15 @@ async function completeFirebaseLogin(payload: {
       createdBy: credential.user.uid,
       updatedBy: credential.user.uid,
     });
+  } else {
+    await updateDoc(profileRef, {
+      email: payload.user.email || "",
+      displayName: payload.user.displayName,
+      updatedAt: now,
+      updatedBy: credential.user.uid,
+    });
   }
+
   return credential.user;
 }
 
