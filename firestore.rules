@@ -6,7 +6,13 @@ service cloud.firestore {
     function isAdmin() { return role() == 'admin'; }
     function isModerator() { return role() == 'moderator' || isAdmin(); }
     function isMember(schoolId) {
-      return signedIn() && request.auth.token.schoolId == schoolId;
+      return signedIn()
+        && request.auth.token.schoolId == schoolId
+        && (
+          request.auth.token.accessGranted == true
+          || role() == 'moderator'
+          || role() == 'admin'
+        );
     }
     function unchangedRole() { return request.resource.data.role == resource.data.role; }
 
