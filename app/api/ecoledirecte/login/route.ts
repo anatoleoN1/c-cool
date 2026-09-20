@@ -39,6 +39,7 @@ function responseFor(
         "Élève",
       email: account.email || null,
       schoolId: account.codeOgec,
+      schoolRne: account.profile?.rneEtablissement || "",
       schoolName: account.nomEtablissement || "Établissement",
       edStudentId: account.id,
       classId: account.profile?.classe?.id,
@@ -163,6 +164,8 @@ export async function POST(request: Request) {
       account.codeOgec,
       cookieOptions,
     );
+    response.cookies.set("c_cool_ed_role", access.role, cookieOptions);
+    response.cookies.set("c_cool_ed_account_type", account.typeCompte, cookieOptions);
 
     response.cookies.set(
       "c_cool_ed_school_name",
