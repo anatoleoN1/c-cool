@@ -81,6 +81,7 @@ export async function POST(request: Request) {
         account.typeCompte,
         access.allowed,
         access.role,
+        access.schoolId,
       );
 
     const response = NextResponse.json({
