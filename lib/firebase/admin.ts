@@ -29,9 +29,12 @@ export async function createEcoleDirecteCustomToken(
   schoolId: string,
   edStudentId: string,
   edAccountType: string,
+  accessGranted: boolean,
+  isAdmin: boolean,
 ) {
   const auth = adminAuth();
   let role: "student" | "moderator" | "admin" = "student";
+
   try {
     const existing = await auth.getUser(uid);
     const existingRole = existing.customClaims?.role;
@@ -42,10 +45,32 @@ export async function createEcoleDirecteCustomToken(
     // Premier accès : le rôle par défaut est élève.
   }
 
-  return auth.createCustomToken(uid, {
+  if (isAdmin) {
+    role = "admin";
+  }
+
+  const customClaims = {
     role,
     schoolId,
     edStudentId,
     edAccountType,
-  });
+    accessGranted: accessGranted || role === "admin",
+  };
+
+  // Le profil Firestore est synchronisé côté serveur : le client
+  // ne peut donc pas s'auto-promouvoir en administrateur.
+  await adminDb().collection("users").doc(uid).set(
+    {
+      id: uid,
+      role,
+      activeSchoolIds: [schoolId],
+      updatedAt: new Date().toISOString(),
+      updatedBy: uid,
+      createdBy: uid,
+      createdAt: new Date().toISOString(),
+    },
+    { merge: true },
+  );
+
+  return auth.createCustomToken(uid, customClaims);
 }
