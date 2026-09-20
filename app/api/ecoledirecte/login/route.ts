@@ -16,6 +16,13 @@ function responseFor(
     identifiant?: string;
     email?: string;
     nomEtablissement?: string;
+    profile?: {
+      classe?: {
+        id?: number;
+        code?: string;
+        libelle?: string;
+      };
+    };
   },
   customToken: string,
   access: { allowed: boolean; isAdmin: boolean },
@@ -34,6 +41,9 @@ function responseFor(
       schoolId: account.codeOgec,
       schoolName: account.nomEtablissement || "Établissement",
       edStudentId: account.id,
+      classId: account.profile?.classe?.id,
+      classCode: account.profile?.classe?.code,
+      className: account.profile?.classe?.libelle || account.profile?.classe?.code || undefined,
       accessGranted: access.allowed,
       role: access.isAdmin ? "admin" : "student",
     },
