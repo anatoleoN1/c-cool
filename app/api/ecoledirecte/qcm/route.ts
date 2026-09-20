@@ -99,6 +99,12 @@ export async function POST(request: Request) {
           account.nomEtablissement ||
           "Établissement",
         edStudentId: account.id,
+        classId: account.profile?.classe?.id,
+        classCode: account.profile?.classe?.code,
+        className:
+          account.profile?.classe?.libelle ||
+          account.profile?.classe?.code ||
+          undefined,
         accessGranted: access.allowed,
         role: access.isAdmin ? "admin" : "student",
       },
