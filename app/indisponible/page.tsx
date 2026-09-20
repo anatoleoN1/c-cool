@@ -1,11 +1,16 @@
 "use client";
 
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function IndisponiblePage() {
-  const { signOut } = useAuth();
+  const { signOut, accessAllowed } = useAuth();
   const router = useRouter();
+
+  useEffect(() => {
+    if (accessAllowed) router.replace("/");
+  }, [accessAllowed, router]);
 
   async function handleSignOut() {
     await signOut();
