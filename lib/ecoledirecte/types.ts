@@ -11,6 +11,17 @@ export type EcoleDirecteAccount = {
   nomEtablissement?: string;
   logoEtablissement?: string;
   modules?: Array<{ code: string; enable: boolean; params?: Record<string, string> }>;
+  profile?: {
+    nomEtablissement?: string;
+    idEtablissement?: string;
+    rneEtablissement?: string;
+    classe?: {
+      id?: number;
+      code?: string;
+      libelle?: string;
+      estNote?: number;
+    };
+  };
 };
 
 export type EcoleDirecteEnvelope<T> = {
