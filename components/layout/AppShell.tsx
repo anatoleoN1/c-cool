@@ -7,15 +7,26 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, profile, loading, isConfigured, signOut } = useAuth();
+  const { user, profile, loading, isConfigured, accessAllowed, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (isConfigured && !loading && !user) {
       router.replace(`/connexion?next=${encodeURIComponent(pathname)}`);
+      return;
     }
-  }, [isConfigured, loading, pathname, router, user]);
+
+    if (
+      isConfigured &&
+      !loading &&
+      user &&
+      !accessAllowed &&
+      pathname !== "/indisponible"
+    ) {
+      router.replace("/indisponible");
+    }
+  }, [accessAllowed, isConfigured, loading, pathname, router, user]);
 
   if (!isConfigured) {
     return (
@@ -29,8 +40,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (loading || !user) {
-    return <main className="auth-gate"><p>Chargement de votre espace…</p></main>;
+  if (loading || !user || !accessAllowed) {
+    return <main className="auth-gate"><p>Vérification de votre accès…</p></main>;
   }
 
   const identity = profile?.displayName || user.displayName || user.email || "Élève";
