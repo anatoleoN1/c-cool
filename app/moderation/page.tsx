@@ -11,28 +11,37 @@ export default function ModerationPage() {
   const [pending, setPending] = useState<Contribution[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  async function load() {
-    const schoolId = profile?.activeSchoolIds[0];
-    if (!schoolId || (role !== "moderator" && role !== "admin")) return;
-
-    try {
-      const contributions = await new ContributionRepository(schoolId).list();
-      setPending(
-        contributions.filter(
-          (item) => item.status === "pending" || item.status === "under_review",
-        ),
-      );
-    } catch (caught) {
-      setError(
-        caught instanceof Error
-          ? caught.message
-          : "Impossible de charger la file de modération.",
-      );
-    }
-  }
-
   useEffect(() => {
-    void load();
+    let cancelled = false;
+
+    async function refresh() {
+      const schoolId = profile?.activeSchoolIds[0];
+      if (!schoolId || (role !== "moderator" && role !== "admin")) return;
+
+      try {
+        const contributions = await new ContributionRepository(schoolId).list();
+        if (!cancelled) {
+          setPending(
+            contributions.filter(
+              (item) => item.status === "pending" || item.status === "under_review",
+            ),
+          );
+        }
+      } catch (caught) {
+        if (!cancelled) {
+          setError(
+            caught instanceof Error
+              ? caught.message
+              : "Impossible de charger la file de modération.",
+          );
+        }
+      }
+    }
+
+    void refresh();
+    return () => {
+      cancelled = true;
+    };
   }, [profile?.activeSchoolIds, role]);
 
   async function review(item: Contribution, status: "approved" | "rejected") {
