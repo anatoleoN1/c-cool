@@ -84,7 +84,7 @@ export default function MessagesPage() {
       setContent("");
       setLinkHref("");
       setLinkLabel("");
-      await load();
+      await refresh();
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Le message n’a pas pu être envoyé.");
     } finally {
