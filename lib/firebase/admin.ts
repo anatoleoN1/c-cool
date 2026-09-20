@@ -28,6 +28,23 @@ function getAdminApp(): App {
 export const adminAuth = () => getAuth(getAdminApp());
 export const adminDb = () => getFirestore(getAdminApp());
 export const adminStorage = () => getStorage(getAdminApp());
+export async function refreshEcoleDirecteClaims(input: {
+  uid: string;
+  schoolId: string;
+  edStudentId: string;
+  edAccountType: string;
+  accessGranted: boolean;
+  role: "student" | "moderator" | "admin";
+}) {
+  await adminAuth().setCustomUserClaims(input.uid, {
+    role: input.role,
+    schoolId: input.schoolId,
+    edStudentId: input.edStudentId,
+    edAccountType: input.edAccountType,
+    accessGranted: input.accessGranted || input.role !== "student",
+  });
+}
+
 
 export async function createEcoleDirecteCustomToken(
   uid: string,
