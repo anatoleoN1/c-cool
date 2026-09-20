@@ -31,6 +31,7 @@ export const adminStorage = () => getStorage(getAdminApp());
 export async function refreshEcoleDirecteClaims(input: {
   uid: string;
   schoolId: string;
+  schoolRne?: string;
   edStudentId: string;
   edAccountType: string;
   accessGranted: boolean;
@@ -49,6 +50,7 @@ export async function refreshEcoleDirecteClaims(input: {
 export async function createEcoleDirecteCustomToken(
   uid: string,
   schoolId: string,
+  schoolRne?: string,
   edStudentId: string,
   edAccountType: string,
   accessGranted: boolean,
@@ -63,6 +65,7 @@ export async function createEcoleDirecteCustomToken(
   const customClaims = {
     role,
     schoolId,
+    ...(schoolRne ? { schoolRne } : {}),
     edStudentId,
     edAccountType,
     accessGranted: accessGranted || role !== "student",
