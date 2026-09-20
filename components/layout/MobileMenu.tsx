@@ -19,7 +19,7 @@ const navigation = [
 
 export default function MobileMenu() {
   const [open, setOpen] = useState(false);
-  const { profile } = useAuth();
+  const { role } = useAuth();
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -56,7 +56,12 @@ export default function MobileMenu() {
                 </Link>
               ))}
 
-              {profile?.role === "moderator" || profile?.role === "admin" ? (
+              {role === "admin" ? (
+                <Link href="/admin" className="nav-item" onClick={() => setOpen(false)}>
+                  <span className="nav-icon">◆</span><span>Admin</span>
+                </Link>
+              ) : null}
+              {role === "moderator" || role === "admin" ? (
                 <Link href="/moderation" className="nav-item" onClick={() => setOpen(false)}>
                   <span className="nav-icon">⚑</span><span>Modération</span>
                 </Link>
