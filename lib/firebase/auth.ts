@@ -21,6 +21,7 @@ async function completeFirebaseLogin(payload: {
     displayName: string;
     email: string | null;
     schoolId: string;
+    schoolRne?: string;
     classId?: number;
     classCode?: string;
     className?: string;
@@ -44,6 +45,7 @@ async function completeFirebaseLogin(payload: {
       email: payload.user.email || "",
       displayName: payload.user.displayName,
       classId: payload.user.classId,
+      schoolRne: payload.user.schoolRne,
       classCode: payload.user.classCode,
       className: payload.user.className,
       role: "student",
@@ -58,6 +60,7 @@ async function completeFirebaseLogin(payload: {
       email: payload.user.email || "",
       displayName: payload.user.displayName,
       classId: payload.user.classId,
+      schoolRne: payload.user.schoolRne,
       classCode: payload.user.classCode,
       className: payload.user.className,
       updatedAt: now,
