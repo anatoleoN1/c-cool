@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createEcoleDirecteCustomToken } from "@/lib/firebase/admin";
 import { login } from "@/lib/ecoledirecte/client";
+import { evaluateEcoleDirecteAccess } from "@/lib/ecoledirecte/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,6 +33,8 @@ function responseFor(
       schoolId: account.codeOgec,
       schoolName: account.nomEtablissement || "Établissement",
       edStudentId: account.id,
+      accessGranted: access.allowed,
+      role: access.isAdmin ? "admin" : "student",
     },
   };
 }
@@ -109,12 +112,15 @@ export async function POST(request: Request) {
     const account = result.account;
 
     const uid = `ed_${account.codeOgec}_${account.id}`;
+    const access = evaluateEcoleDirecteAccess(account);
 
     const customToken = await createEcoleDirecteCustomToken(
       uid,
       account.codeOgec,
       String(account.id),
       account.typeCompte,
+      access.allowed,
+      access.isAdmin,
     );
 
     const response = NextResponse.json(
