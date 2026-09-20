@@ -42,6 +42,7 @@ export async function refreshEcoleDirecteClaims(input: {
     schoolId: input.schoolId,
     edStudentId: input.edStudentId,
     edAccountType: input.edAccountType,
+    ...(input.schoolRne ? { schoolRne: input.schoolRne } : {}),
     accessGranted: input.accessGranted || input.role !== "student",
   });
 }
@@ -50,11 +51,11 @@ export async function refreshEcoleDirecteClaims(input: {
 export async function createEcoleDirecteCustomToken(
   uid: string,
   schoolId: string,
-  schoolRne?: string,
   edStudentId: string,
   edAccountType: string,
   accessGranted: boolean,
   role: "student" | "moderator" | "admin",
+  schoolRne?: string,
 ) {
   const auth = adminAuth();
 
