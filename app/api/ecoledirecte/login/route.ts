@@ -18,6 +18,7 @@ function responseFor(
     nomEtablissement?: string;
   },
   customToken: string,
+  access: { allowed: boolean; isAdmin: boolean },
 ) {
   const uid = `ed_${account.codeOgec}_${account.id}`;
 
@@ -124,7 +125,7 @@ export async function POST(request: Request) {
     );
 
     const response = NextResponse.json(
-      responseFor(account, customToken),
+      responseFor(account, customToken, access),
     );
 
     const cookieOptions = {
