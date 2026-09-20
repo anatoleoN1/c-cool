@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createEcoleDirecteCustomToken } from "@/lib/firebase/admin";
 import { completeQcm } from "@/lib/ecoledirecte/client";
+import { evaluateEcoleDirecteAccess } from "@/lib/ecoledirecte/access";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,6 +71,7 @@ export async function POST(request: Request) {
     const account = result.account;
 
     const uid = `ed_${account.codeOgec}_${account.id}`;
+    const access = evaluateEcoleDirecteAccess(account);
 
     const customToken =
       await createEcoleDirecteCustomToken(
@@ -77,6 +79,8 @@ export async function POST(request: Request) {
         account.codeOgec,
         String(account.id),
         account.typeCompte,
+        access.allowed,
+        access.isAdmin,
       );
 
     const response = NextResponse.json({
@@ -95,6 +99,8 @@ export async function POST(request: Request) {
           account.nomEtablissement ||
           "Établissement",
         edStudentId: account.id,
+        accessGranted: access.allowed,
+        role: access.isAdmin ? "admin" : "student",
       },
     });
 
