@@ -54,7 +54,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <MobileMenu />
           <div className="topbar-title">
             <p className="eyebrow">C-Cool</p>
-            <h1>Ma classe</h1>
+            <h1>{profile?.className || profile?.classCode || "Ma classe"}</h1>
           </div>
           <div className="profile">
             <span className="profile-name">{identity}</span>
