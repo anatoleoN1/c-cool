@@ -95,6 +95,7 @@ export async function POST(request: Request) {
           "Élève",
         email: account.email || null,
         schoolId: account.codeOgec,
+        schoolRne: account.profile?.rneEtablissement || "",
         schoolName:
           account.nomEtablissement ||
           "Établissement",
@@ -177,6 +178,8 @@ export async function POST(request: Request) {
         maxAge: 604800,
       },
     );
+    response.cookies.set("c_cool_ed_role", access.role, { ...cookieOptions, maxAge: 604800 });
+    response.cookies.set("c_cool_ed_account_type", account.typeCompte, { ...cookieOptions, maxAge: 604800 });
 
     response.cookies.set(
       "c_cool_ed_school_name",
