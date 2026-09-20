@@ -4,6 +4,9 @@ export interface User extends AuditFields {
   id: string;
   email: string;
   displayName: string;
+  className?: string;
+  classCode?: string;
+  classId?: number;
   role: UserRole;
   activeSchoolIds: string[];
   photoURL?: string;
