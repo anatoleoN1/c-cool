@@ -12,11 +12,17 @@ function getAdminApp(): App {
   const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
   const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
+  // En production sur Firebase App Hosting, Google fournit
+  // automatiquement les Application Default Credentials.
   if (!projectId || !clientEmail || !privateKey) {
-    throw new Error("Les identifiants Firebase Admin sont absents côté serveur.");
+    return initializeApp();
   }
 
-  return initializeApp({ credential: cert({ projectId, clientEmail, privateKey }) });
+  // En développement local, on continue d'utiliser le compte de service
+  // configuré dans .env.local.
+  return initializeApp({
+    credential: cert({ projectId, clientEmail, privateKey }),
+  });
 }
 
 export const adminAuth = () => getAuth(getAdminApp());
