@@ -32,7 +32,11 @@ const requiredConfig = {
 const appCheckKey = process.env.NEXT_PUBLIC_FIREBASE_APPCHECK_RECAPTCHA_KEY;
 
 export function isFirebaseConfigured(): boolean {
-  return Object.values(requiredConfig).every(Boolean);
+  const explicitConfig = Object.values(requiredConfig).every(Boolean);
+
+  // En production sur Firebase App Hosting, le SDK Firebase Web
+  // peut être initialisé automatiquement par l'environnement.
+  return explicitConfig || process.env.NODE_ENV === "production";
 }
 
 let emulatorConnected = false;
@@ -76,7 +80,12 @@ function initializeClientAppCheck(app: FirebaseApp): AppCheck | null {
 export function getFirebaseClient(): FirebaseClientServices | null {
   if (!isFirebaseConfigured()) return null;
 
-  const app = getApps().length ? getApp() : initializeApp(requiredConfig);
+  const hasExplicitConfig = Object.values(requiredConfig).every(Boolean);
+  const app = getApps().length
+    ? getApp()
+    : hasExplicitConfig
+      ? initializeApp(requiredConfig)
+      : initializeApp();
   const appCheck = initializeClientAppCheck(app);
   const auth = getAuth(app);
   const db = getFirestore(app);
