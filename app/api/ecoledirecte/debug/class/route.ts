@@ -7,6 +7,11 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   const cookieStore = await cookies();
 
+  const sessionToken = cookieStore.get("c_cool_ed_token")?.value || "";
+  if (!sessionToken) {
+    return NextResponse.json({ error: "Session C-Cool absente." }, { status: 401 });
+  }
+
   const schoolCode = cookieStore.get("c_cool_ed_school")?.value || "";
   const schoolName = cookieStore.get("c_cool_ed_school_name")?.value || "";
   const schoolId = cookieStore.get("c_cool_ed_school_id")?.value || "";
