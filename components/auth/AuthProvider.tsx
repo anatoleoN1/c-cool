@@ -3,7 +3,7 @@
 import { createContext, useContext, useMemo, useEffect, useState } from "react";
 import { getIdTokenResult, type User as FirebaseUser } from "firebase/auth";
 import type { User } from "@/types";
-import { completeEcoleDirecteQcm, getCurrentProfile, observeAuth, signIn, signOut } from "@/lib/firebase/auth";
+import { completeEcoleDirecteQcm, getCurrentProfile, observeAuth, refreshAuthorization, signIn, signOut } from "@/lib/firebase/auth";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
 
 type AuthContextValue = {
@@ -60,6 +60,34 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
         .finally(() => setLoading(false));
     });
   }, [isConfigured]);
+
+  useEffect(() => {
+    if (!isConfigured || !user) return;
+
+    let cancelled = false;
+
+    const refresh = async () => {
+      if (cancelled) return;
+      await refreshAuthorization();
+    };
+
+    void refresh();
+    const interval = window.setInterval(() => {
+      void refresh();
+    }, 15000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") void refresh();
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [isConfigured, user]);
 
   const value = useMemo(
     () => ({
