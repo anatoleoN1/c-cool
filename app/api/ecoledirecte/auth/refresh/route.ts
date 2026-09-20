@@ -74,11 +74,23 @@ export async function POST(request: Request) {
       role: access.role,
     });
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       ok: true,
       role: access.role,
       accessGranted: access.allowed,
     });
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax" as const,
+      path: "/",
+      maxAge: 604800,
+    };
+
+    response.cookies.set("c_cool_ed_role", access.role, cookieOptions);
+
+    return response;
   } catch {
     return NextResponse.json(
       { error: "Impossible d'actualiser les autorisations." },
