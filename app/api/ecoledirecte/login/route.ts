@@ -17,6 +17,7 @@ function responseFor(
     email?: string;
     nomEtablissement?: string;
     profile?: {
+      rneEtablissement?: string;
       classe?: {
         id?: number;
         code?: string;
