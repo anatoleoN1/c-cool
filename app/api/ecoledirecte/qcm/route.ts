@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         String(account.id),
         account.typeCompte,
         access.allowed,
-        access.isAdmin,
+        access.role,
       );
 
     const response = NextResponse.json({
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
           account.profile?.classe?.code ||
           undefined,
         accessGranted: access.allowed,
-        role: access.isAdmin ? "admin" : "student",
+        role: access.role,
       },
     });
 
