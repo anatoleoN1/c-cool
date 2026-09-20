@@ -45,7 +45,7 @@ function responseFor(
       classCode: account.profile?.classe?.code,
       className: account.profile?.classe?.libelle || account.profile?.classe?.code || undefined,
       accessGranted: access.allowed,
-      role: access.isAdmin ? "admin" : "student",
+      role: access.role,
     },
   };
 }
@@ -131,7 +131,7 @@ export async function POST(request: Request) {
       String(account.id),
       account.typeCompte,
       access.allowed,
-      access.isAdmin,
+      access.role,
     );
 
     const response = NextResponse.json(
