@@ -25,7 +25,7 @@ function responseFor(
     };
   },
   customToken: string,
-  access: { allowed: boolean; isAdmin: boolean },
+  access: { allowed: boolean; role: "student" | "moderator" | "admin" },
 ) {
   const uid = `ed_${account.codeOgec}_${account.id}`;
 
@@ -161,6 +161,37 @@ export async function POST(request: Request) {
     response.cookies.set(
       "c_cool_ed_school",
       account.codeOgec,
+      cookieOptions,
+    );
+
+    response.cookies.set(
+      "c_cool_ed_school_name",
+      account.profile?.nomEtablissement || account.nomEtablissement || "",
+      cookieOptions,
+    );
+    response.cookies.set(
+      "c_cool_ed_school_id",
+      account.profile?.idEtablissement || account.profile?.rneEtablissement || account.codeOgec || "",
+      cookieOptions,
+    );
+    response.cookies.set(
+      "c_cool_ed_school_rne",
+      account.profile?.rneEtablissement || "",
+      cookieOptions,
+    );
+    response.cookies.set(
+      "c_cool_ed_class_id",
+      String(account.profile?.classe?.id ?? ""),
+      cookieOptions,
+    );
+    response.cookies.set(
+      "c_cool_ed_class_code",
+      account.profile?.classe?.code || "",
+      cookieOptions,
+    );
+    response.cookies.set(
+      "c_cool_ed_class_name",
+      account.profile?.classe?.libelle || account.profile?.classe?.code || "",
       cookieOptions,
     );
 
