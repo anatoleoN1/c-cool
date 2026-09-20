@@ -3,6 +3,7 @@ import type { EcoleDirecteAccount } from "./types";
 export type CcoolAccess = {
   allowed: boolean;
   isAdmin: boolean;
+  role: "student" | "moderator" | "admin";
   schoolName: string;
   schoolId: string;
   classCode: string;
@@ -24,17 +25,29 @@ function csv(name: string): string[] {
     .filter(Boolean);
 }
 
-function isAdminAccount(account: EcoleDirecteAccount): boolean {
+function getConfiguredRole(account: EcoleDirecteAccount): "student" | "moderator" | "admin" {
   const uid = `ed_${account.codeOgec}_${account.id}`;
-  const ids = csv("CCOOL_ADMIN_ED_IDS");
-  const uids = csv("CCOOL_ADMIN_UIDS");
-  const emails = csv("CCOOL_ADMIN_EMAILS").map(normalize);
+  const ids = String(account.id);
+  const normalizedEmail = account.email ? normalize(account.email) : "";
 
-  return (
-    ids.includes(String(account.id)) ||
-    uids.includes(uid) ||
-    (!!account.email && emails.includes(normalize(account.email)))
-  );
+  const adminIds = csv("CCOOL_ADMIN_ED_IDS");
+  const adminUids = csv("CCOOL_ADMIN_UIDS");
+  const adminEmails = csv("CCOOL_ADMIN_EMAILS").map(normalize);
+
+  if (
+    adminIds.includes(ids) ||
+    adminUids.includes(uid) ||
+    (!!normalizedEmail && adminEmails.includes(normalizedEmail))
+  ) {
+    return "admin";
+  }
+
+  const moderatorIds = csv("CCOOL_MODERATOR_ED_IDS");
+  if (moderatorIds.includes(ids) || moderatorIds.includes(uid)) {
+    return "moderator";
+  }
+
+  return "student";
 }
 
 function matchesConfiguredClass(code: string, label: string): boolean {
@@ -93,15 +106,17 @@ export function evaluateEcoleDirecteAccess(
   const classCode = profile?.classe?.code || "";
   const classLabel = profile?.classe?.libelle || "";
 
-  const isAdmin = isAdminAccount(account);
+  const role = getConfiguredRole(account);
+  const isAdmin = role === "admin";
   const allowed =
-    isAdmin ||
+    role !== "student" ||
     (matchesConfiguredSchool(schoolId, schoolName) &&
       matchesConfiguredClass(classCode, classLabel));
 
   return {
     allowed,
     isAdmin,
+    role,
     schoolName,
     schoolId,
     classCode,
