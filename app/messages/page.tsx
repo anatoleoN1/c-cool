@@ -28,21 +28,35 @@ export default function MessagesPage() {
 
   const schoolId = profile?.activeSchoolIds[0];
 
-  async function load() {
-    if (!schoolId) return;
-    try {
-      setLoading(true);
-      const items = await new ClassMessageRepository(schoolId).list();
-      setMessages(items);
-      setError(null);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Impossible de charger le groupe.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  useEffect(() => {
+    let cancelled = false;
 
-  useEffect(() => { void load(); }, [schoolId]);
+    async function refresh() {
+      if (!schoolId) return;
+
+      try {
+        setLoading(true);
+        const items = await new ClassMessageRepository(schoolId).list();
+        if (!cancelled) {
+          setMessages(items);
+          setError(null);
+        }
+      } catch (caught) {
+        if (!cancelled) {
+          setError(
+            caught instanceof Error ? caught.message : "Impossible de charger le groupe.",
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    void refresh();
+    return () => {
+      cancelled = true;
+    };
+  }, [schoolId]);
 
   async function submit(event: FormEvent) {
     event.preventDefault();
