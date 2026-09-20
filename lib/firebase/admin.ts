@@ -29,42 +29,30 @@ export const adminAuth = () => getAuth(getAdminApp());
 export const adminDb = () => getFirestore(getAdminApp());
 export const adminStorage = () => getStorage(getAdminApp());
 
-
 export async function createEcoleDirecteCustomToken(
   uid: string,
   schoolId: string,
   edStudentId: string,
   edAccountType: string,
   accessGranted: boolean,
-  isAdmin: boolean,
+  role: "student" | "moderator" | "admin",
 ) {
   const auth = adminAuth();
-  let role: "student" | "moderator" | "admin" = "student";
 
-  try {
-    const existing = await auth.getUser(uid);
-    const existingRole = existing.customClaims?.role;
-    if (existingRole === "moderator" || existingRole === "admin") {
-      role = existingRole;
-    }
-  } catch {
-    // Premier accès : le rôle par défaut est élève.
-  }
-
-  if (isAdmin) {
-    role = "admin";
-  }
-
+  // Les variables .env sont la source d'autorité pour les rôles.
+  // Elles sont réévaluées à chaque nouvelle connexion.
+  // Si un ID est retiré de .env.local, il redevient donc élève
+  // lors de la prochaine connexion.
   const customClaims = {
     role,
     schoolId,
     edStudentId,
     edAccountType,
-    accessGranted: accessGranted || role === "admin",
+    accessGranted: accessGranted || role !== "student",
   };
 
   // Le profil Firestore est synchronisé côté serveur : le client
-  // ne peut donc pas s'auto-promouvoir en administrateur.
+  // ne peut donc pas s'auto-promouvoir en administrateur/modérateur.
   await adminDb().collection("users").doc(uid).set(
     {
       id: uid,
