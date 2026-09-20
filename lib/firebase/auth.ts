@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  getIdToken,
   onAuthStateChanged,
   signInWithCustomToken,
   signOut as firebaseSignOut,
@@ -120,6 +121,23 @@ export async function signOut() {
   const services = getFirebaseClient();
   if (services) await firebaseSignOut(services.auth);
   await fetch("/api/ecoledirecte/logout", { method: "POST" });
+}
+
+export async function refreshAuthorization() {
+  const services = getFirebaseClient();
+  const user = services?.auth.currentUser;
+  if (!user) return false;
+
+  const idToken = await getIdToken(user, true);
+  const response = await fetch("/api/ecoledirecte/auth/refresh", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
+
+  if (!response.ok) return false;
+
+  await user.getIdToken(true);
+  return true;
 }
 
 export async function getCurrentProfile(uid: string): Promise<User | null> {
