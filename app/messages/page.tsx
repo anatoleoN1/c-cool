@@ -84,7 +84,8 @@ export default function MessagesPage() {
       setContent("");
       setLinkHref("");
       setLinkLabel("");
-      await refresh();
+      const refreshedMessages = await new ClassMessageRepository(profile.activeSchoolIds[0]).list();
+      setMessages(refreshedMessages);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Le message n’a pas pu être envoyé.");
     } finally {
