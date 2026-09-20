@@ -1,9 +1,16 @@
 "use client";
 
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useRouter } from "next/navigation";
 
 export default function IndisponiblePage() {
   const { signOut } = useAuth();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    await signOut();
+    router.replace("/connexion");
+  }
 
   return (
     <main className="auth-page">
@@ -22,7 +29,7 @@ export default function IndisponiblePage() {
           Ton compte École Directe a bien été identifié, mais il ne correspond
           pas à la classe autorisée.
         </p>
-        <button className="auth-submit" type="button" onClick={() => void signOut()}>
+        <button className="auth-submit" type="button" onClick={() => void handleSignOut()}>
           Se déconnecter
         </button>
       </section>
