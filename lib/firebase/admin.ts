@@ -67,7 +67,6 @@ export async function createEcoleDirecteCustomToken(
       updatedAt: new Date().toISOString(),
       updatedBy: uid,
       createdBy: uid,
-      createdAt: new Date().toISOString(),
     },
     { merge: true },
   );
