@@ -19,7 +19,7 @@ const navigation = [
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { profile } = useAuth();
+  const { role } = useAuth();
 
   return (
     <aside className="sidebar">
@@ -49,7 +49,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-bottom">
-        {profile?.role === "moderator" || profile?.role === "admin" ? (
+        {role === "moderator" || role === "admin" ? (
           <Link href="/moderation" className={`nav-item ${pathname.startsWith("/moderation") ? "active" : ""}`}>
             <span className="nav-icon">⚑</span><span>Modération</span>
           </Link>
