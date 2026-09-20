@@ -49,6 +49,15 @@ export default function Sidebar() {
       </nav>
 
       <div className="sidebar-bottom">
+        {role === "admin" ? (
+          <Link
+            href="/admin"
+            className={`nav-item ${pathname.startsWith("/admin") ? "active" : ""}`}
+          >
+            <span className="nav-icon">◆</span>
+            <span>Admin</span>
+          </Link>
+        ) : null}
         {role === "moderator" || role === "admin" ? (
           <Link href="/moderation" className={`nav-item ${pathname.startsWith("/moderation") ? "active" : ""}`}>
             <span className="nav-icon">⚑</span><span>Modération</span>
