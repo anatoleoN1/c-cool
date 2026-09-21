@@ -25,6 +25,7 @@ function label(date: Date) {
 }
 
 export default function AgendaPage() {
+  const { profile } = useAuth();
   const [week, setWeek] = useState(() => startOfWeek(new Date()));
   const [items, setItems] = useState<EcoleDirecteScheduleItem[]>([]);
   const [loading, setLoading] = useState(true);
