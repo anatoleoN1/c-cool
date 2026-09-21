@@ -6,6 +6,7 @@ import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ChapterRepository, SubjectRepository } from "@/lib/repositories/learning-repository";
 import type { Subject } from "@/types";
+import PublishedContributionList from "@/components/contributions/PublishedContributionList";
 
 export default function CoursPage() {
   const { profile, loading: authLoading } = useAuth();
