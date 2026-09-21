@@ -33,7 +33,7 @@ export default function CookiesPage() {
             <>
               <p>Si C-Cool ajoute des traceurs de mesure d’audience, de publicité, de réseaux sociaux ou d’autres fonctionnalités nécessitant un consentement, ils ne devront être activés qu’après le recueil d’un consentement valide lorsque la réglementation l’exige.</p>
               <p>Le refus doit être aussi simple que l’acceptation et le retrait du consentement doit rester possible à tout moment.</p>
-              <p><strong>Traceurs soumis à consentement actuellement utilisés :</strong> [À COMPLÉTER — ou indiquer « aucun » après inventaire].</p>
+              <p><strong>Traceurs soumis à consentement actuellement utilisés :</strong> C-Cool n'utilise actuellement aucun traceur soumis au consentement..</p>
             </>
           ),
         },
@@ -41,7 +41,7 @@ export default function CookiesPage() {
           title: "4. Gestion des préférences",
           children: (
             <>
-              <p><strong>Gestionnaire de consentement :</strong> [À COMPLÉTER — aucun / outil retenu / mécanisme C-Cool].</p>
+              <p><strong>Gestionnaire de consentement :</strong> aucun.</p>
               <p>Si un gestionnaire de consentement est utilisé, le lien permettant de modifier ou retirer les choix devra rester accessible depuis le site.</p>
             </>
           ),
