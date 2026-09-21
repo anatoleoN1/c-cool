@@ -57,7 +57,7 @@ export default function CguPage() {
             <>
               <p>Les contributions peuvent être acceptées, refusées, modifiées, masquées ou supprimées lorsqu’elles ne respectent pas les règles du service, les droits de tiers ou les exigences de sécurité.</p>
               <p>Les comptes disposant de droits de modération ou d’administration sont utilisés pour gérer les contenus et les accès conformément aux règles internes de C-Cool.</p>
-              <p><strong>Règles complémentaires de modération :</strong> [À COMPLÉTER si une charte de modération distincte est créée]</p>
+              <p><strong>une charte de modération distincte sera surement créée dans une periode à venir.</strong></p>
             </>
           ),
         },
@@ -83,7 +83,7 @@ export default function CguPage() {
           children: (
             <>
               <p>Sont notamment interdits : les tentatives d’accès non autorisées, l’exploitation volontaire de failles, l’introduction de code malveillant, le contournement des mécanismes de sécurité, l’usurpation de compte et l’utilisation du service pour nuire à d’autres personnes.</p>
-              <p>Une vulnérabilité peut être signalée à : <strong>redtrap.off@gmail.com</strong>.</p>
+              <p>Une vulnérabilité peut être signalée à : <strong>redtrap.off@gmail.com (provisoire)</strong>.</p>
             </>
           ),
         },
@@ -102,7 +102,7 @@ export default function CguPage() {
         {
           title: "11. Contact",
           children: (
-            <p>Pour toute question concernant les présentes CGU : <strong>redtrap.off@gmail.com</strong>.</p>
+            <p>Pour toute question concernant les présentes CGU : <strong>redtrap.off@gmail.com (provisoire) </strong>.</p>
           ),
         },
       ]}
