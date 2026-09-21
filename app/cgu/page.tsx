@@ -57,7 +57,7 @@ export default function CguPage() {
             <>
               <p>Les contributions peuvent être acceptées, refusées, modifiées, masquées ou supprimées lorsqu’elles ne respectent pas les règles du service, les droits de tiers ou les exigences de sécurité.</p>
               <p>Les comptes disposant de droits de modération ou d’administration sont utilisés pour gérer les contenus et les accès conformément aux règles internes de C-Cool.</p>
-              <p><strong>une charte de modération distincte sera surement créée dans une periode à venir.</strong></p>
+              <p>Une charte de modération distincte pourra être créée ultérieurement afin de préciser les règles applicables aux contributions et aux décisions de modération.</p>
             </>
           ),
         },
