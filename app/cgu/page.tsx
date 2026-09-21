@@ -83,7 +83,7 @@ export default function CguPage() {
           children: (
             <>
               <p>Sont notamment interdits : les tentatives d’accès non autorisées, l’exploitation volontaire de failles, l’introduction de code malveillant, le contournement des mécanismes de sécurité, l’usurpation de compte et l’utilisation du service pour nuire à d’autres personnes.</p>
-              <p>Une vulnérabilité peut être signalée à : <strong>[À COMPLÉTER — adresse de contact sécurité]</strong>.</p>
+              <p>Une vulnérabilité peut être signalée à : <strong>redtrap.off@gmail.com</strong>.</p>
             </>
           ),
         },
@@ -102,7 +102,7 @@ export default function CguPage() {
         {
           title: "11. Contact",
           children: (
-            <p>Pour toute question concernant les présentes CGU : <strong>[À COMPLÉTER — adresse e-mail]</strong>.</p>
+            <p>Pour toute question concernant les présentes CGU : <strong>redtrap.off@gmail.com</strong>.</p>
           ),
         },
       ]}
