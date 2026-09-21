@@ -65,7 +65,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </button>
           </div>
         </header>
+
         {children}
+
         <LegalFooter />
       </section>
     </main>
