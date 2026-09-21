@@ -9,6 +9,7 @@ export default function CookiesPage() {
   return (
     <LegalPage
       title="Cookies et traceurs"
+      updated="21 septembre 2026"
       intro="C-Cool privilégie un fonctionnement avec le minimum de traceurs. Cette page devra être tenue à jour en fonction des cookies et services réellement activés en production."
       sections={[
         {
