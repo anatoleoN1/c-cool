@@ -1,17 +1,25 @@
-"use client";
-
 import Link from "next/link";
 
-export default function LegalFooter() {
+const links = [
+  { href: "/mentions-legales", label: "Mentions légales" },
+  { href: "/cgu", label: "CGU" },
+  { href: "/confidentialite", label: "Données & confidentialité" },
+  { href: "/cookies", label: "Cookies" },
+];
+
+export default function LegalFooter({ compact = false }: { compact?: boolean }) {
   return (
-    <footer className="border-t border-black/8 px-5 py-6 text-xs opacity-60 sm:px-8">
-      <div className="flex flex-wrap gap-x-4 gap-y-2">
-        <Link href="/mentions-legales" className="hover:opacity-100">Mentions légales</Link>
-        <Link href="/cgu" className="hover:opacity-100">CGU</Link>
-        <Link href="/confidentialite" className="hover:opacity-100">Données & confidentialité</Link>
-        <Link href="/cookies" className="hover:opacity-100">Cookies</Link>
+    <footer className={`legal-footer${compact ? " legal-footer-compact" : ""}`}>
+      <div className="legal-footer-inner">
+        <nav aria-label="Informations légales" className="legal-footer-links">
+          {links.map((link) => (
+            <Link key={link.href} href={link.href}>
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <p>© {new Date().getFullYear()} C-Cool</p>
       </div>
-      <p className="mt-2">© {new Date().getFullYear()} C-Cool · Informations légales à jour au {new Date().toLocaleDateString("fr-FR")}.</p>
     </footer>
   );
 }
