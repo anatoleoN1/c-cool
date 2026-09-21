@@ -9,6 +9,7 @@ export default function CguPage() {
   return (
     <LegalPage
       title="Conditions générales d’utilisation"
+      updated="21 septembre 2026"
       intro="Les présentes conditions encadrent l’utilisation de C-Cool, plateforme destinée à faciliter l’organisation du travail scolaire et le partage de ressources au sein d’une communauté scolaire."
       sections={[
         {
