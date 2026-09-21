@@ -9,6 +9,7 @@ export default function MentionsLegalesPage() {
   return (
     <LegalPage
       title="Mentions légales"
+      updated="21 septembre 2026"
       intro="Les informations permettant d’identifier l’éditeur de C-Cool et les principaux prestataires techniques du service."
       sections={[
         {
