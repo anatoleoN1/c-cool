@@ -9,6 +9,7 @@ export default function ConfidentialitePage() {
   return (
     <LegalPage
       title="Données personnelles & confidentialité"
+      updated="21 septembre 2026"
       intro="Cette page explique quelles données C-Cool traite, pourquoi, avec quels prestataires et quels droits peuvent être exercés. Les éléments marqués « À COMPLÉTER » doivent être vérifiés avant la mise en production publique."
       sections={[
         {
