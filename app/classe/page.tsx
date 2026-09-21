@@ -6,6 +6,7 @@ import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ClassMessageRepository } from "@/lib/repositories/classroom-repository";
 import type { ClassMessage } from "@/types";
+import PublishedContributionList from "@/components/contributions/PublishedContributionList";
 
 export default function ClassePage() {
   const { profile } = useAuth();
