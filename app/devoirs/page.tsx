@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import type { EcoleDirecteHomeworkIndex } from "@/lib/ecoledirecte/types";
+import PublishedContributionList from "@/components/contributions/PublishedContributionList";
 
 export default function DevoirsPage() {
   const { profile } = useAuth();
