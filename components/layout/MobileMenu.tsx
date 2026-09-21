@@ -1,81 +1,26 @@
 "use client";
-
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 const navigation = [
-  { href: "/", label: "Accueil", icon: "⌂" },
-  { href: "/agenda", label: "Agenda", icon: "◷" },
-  { href: "/cours", label: "Cours", icon: "▤" },
-  { href: "/exercices", label: "Exercices", icon: "✓" },
-  { href: "/devoirs", label: "Devoirs", icon: "☑" },
-  { href: "/revisions", label: "Révisions", icon: "↻" },
-  { href: "/evaluations", label: "Évaluations", icon: "◇" },
-  { href: "/calcul-mental", label: "Calcul mental", icon: "∑" },
-  { href: "/classe", label: "Classe", icon: "◎" },
-  { href: "/messages", label: "Messages", icon: "□" },
+  ["/", "Accueil"], ["/agenda", "Agenda"], ["/cours", "Cours"], ["/exercices", "Exercices"],
+  ["/devoirs", "Devoirs"], ["/revisions", "Révisions"], ["/evaluations", "Évaluations"],
+  ["/calcul-mental", "Calcul mental"], ["/classe", "Classe"], ["/messages", "Messages"],
 ];
 
 export default function MobileMenu() {
-  const [open, setOpen] = useState(false);
-  const { role } = useAuth();
-
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  return (
-    <>
-      <button className="mobile-menu" aria-label="Ouvrir le menu" onClick={() => setOpen(true)}>
-        ☰
-      </button>
-
-      {open && (
-        <div className="mobile-overlay" onClick={() => setOpen(false)}>
-          <aside className="mobile-drawer" onClick={(event) => event.stopPropagation()}>
-            <div className="mobile-drawer-header">
-              <div className="brand">
-                <div className="brand-mark">C</div>
-                <span>C-Cool</span>
-              </div>
-              <button className="mobile-close" aria-label="Fermer le menu" onClick={() => setOpen(false)}>
-                ×
-              </button>
-            </div>
-
-            <nav className="navigation">
-              {navigation.map((item) => (
-                <Link key={item.href} href={item.href} className="nav-item" onClick={() => setOpen(false)}>
-                  <span className="nav-icon">{item.icon}</span>
-                  <span>{item.label}</span>
-                </Link>
-              ))}
-
-              {role === "admin" ? (
-                <Link href="/admin" className="nav-item" onClick={() => setOpen(false)}>
-                  <span className="nav-icon">◆</span><span>Admin</span>
-                </Link>
-              ) : null}
-              {role === "moderator" || role === "admin" ? (
-                <Link href="/moderation" className="nav-item" onClick={() => setOpen(false)}>
-                  <span className="nav-icon">⚑</span><span>Modération</span>
-                </Link>
-              ) : null}
-              <Link href="/contribuer" className="nav-item" onClick={() => setOpen(false)}>
-                <span className="nav-icon">＋</span><span>Contribuer</span>
-              </Link>
-              <Link href="/parametres" className="nav-item" onClick={() => setOpen(false)}>
-                <span className="nav-icon">⚙</span><span>Paramètres</span>
-              </Link>
-            </nav>
-          </aside>
-        </div>
-      )}
-    </>
-  );
+  const [open,setOpen]=useState(false); const {role}=useAuth();
+  useEffect(()=>{document.body.style.overflow=open?"hidden":"";return()=>{document.body.style.overflow=""}},[open]);
+  return <><button className="mobile-menu" aria-label="Ouvrir le menu" onClick={()=>setOpen(true)}>Menu</button>
+    {open && <div className="mobile-overlay" onClick={()=>setOpen(false)}><aside className="mobile-drawer" onClick={e=>e.stopPropagation()}>
+      <div className="mobile-drawer-header"><Link href="/" className="brand" onClick={()=>setOpen(false)}><span className="brand-wordmark">C-Cool</span></Link><button className="mobile-close" onClick={()=>setOpen(false)}>Fermer</button></div>
+      <div className="sidebar-label">Navigation</div><nav className="navigation">{navigation.map(([href,label])=><Link key={href} href={href} className="nav-item" onClick={()=>setOpen(false)}>{label}</Link>)}</nav>
+      <div className="sidebar-label mobile-other-label">Autres</div>
+      {role==="admin" && <Link href="/admin" className="nav-item" onClick={()=>setOpen(false)}>Administration</Link>}
+      {(role==="moderator"||role==="admin") && <Link href="/moderation" className="nav-item" onClick={()=>setOpen(false)}>Modération</Link>}
+      <Link href="/contribuer" className="nav-item" onClick={()=>setOpen(false)}>Contribuer</Link>
+      <Link href="/parametres" className="nav-item" onClick={()=>setOpen(false)}>Paramètres</Link>
+    </aside></div>}
+  </>;
 }
