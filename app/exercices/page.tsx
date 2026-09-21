@@ -41,6 +41,7 @@ export default function ExercicesPage() {
             </article>
           ))}
         </section>
+        <PublishedContributionList schoolId={profile?.activeSchoolIds[0]} kinds={["exercise", "correction"]} title="Exercices et corrections proposés par la classe" />
       </div>
     </AppShell>
   );
