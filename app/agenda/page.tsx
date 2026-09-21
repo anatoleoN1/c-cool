@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import AppShell from "@/components/layout/AppShell";
 import type { EcoleDirecteScheduleItem } from "@/lib/ecoledirecte/types";
+import PublishedContributionList from "@/components/contributions/PublishedContributionList";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 function startOfWeek(date: Date) {
   const d = new Date(date);
