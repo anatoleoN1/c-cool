@@ -34,11 +34,12 @@ export default function PublishedContributionList({
     }
 
     let cancelled = false;
+    const currentSchoolId = schoolId;
 
     async function load() {
       try {
         const lists = await Promise.all(
-          kinds.map((kind) => new PublishedContributionRepository(schoolId).list(kind)),
+          kinds.map((kind) => new PublishedContributionRepository(currentSchoolId).list(kind)),
         );
         if (!cancelled) {
           setItems(
