@@ -63,6 +63,7 @@ export default function CoursPage() {
             </Link>
           ))}
         </section>
+        <PublishedContributionList schoolId={profile?.activeSchoolIds[0]} kinds={["course_note", "method"]} title="Ressources proposées par la classe" />
       </div>
     </AppShell>
   );
