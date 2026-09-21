@@ -64,6 +64,17 @@ service cloud.firestore {
         allow update, delete: if false;
       }
 
+      match /publishedContributions/{contributionId} {
+        allow read: if isMember(schoolId) && resource.data.status == 'approved';
+        allow create: if isModerator()
+          && request.resource.data.schoolId == schoolId
+          && request.resource.data.status == 'approved';
+        allow update: if isModerator()
+          && request.resource.data.schoolId == schoolId
+          && request.resource.data.status == 'approved';
+        allow delete: if isAdmin();
+      }
+
       match /contributions/{contributionId} {
         allow read: if isMember(schoolId) && (resource.data.authorId == request.auth.uid || isModerator());
         allow create: if isMember(schoolId)
