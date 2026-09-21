@@ -17,11 +17,11 @@ export default function MentionsLegalesPage() {
           children: (
             <>
               <p><strong>Nom / dénomination :</strong> OERLEMANS Anatole</p>
-              <p><strong>Statut / forme juridique :</strong> Projet personnel</p>
-              <p><strong>Adresse :</strong> [À COMPLÉTER — adresse légalement requise, selon le statut de l’éditeur]</p>
+              <p><strong>Statut / forme juridique :</strong> Projet porté par l'auteur</p>
+              <p><strong>Adresse :</strong> 5 villa chevreuse 92130 Issy-Les-Moulineaux</p>
               <p><strong>E-mail :</strong> redtrap.off@gmail.com (provisoire)</p>
-              <p><strong>Téléphone :</strong> [À COMPLÉTER si applicable]</p>
-              <p><strong>Responsable de la publication :</strong> [À COMPLÉTER]</p>
+              <p><strong>Téléphone :</strong> +33672096619</p>
+              <p><strong>Responsable de la publication :</strong> OERLEMANS Anatole</p>
             </>
           ),
         },
