@@ -2,6 +2,7 @@
 
 import Sidebar from "./Sidebar";
 import MobileMenu from "./MobileMenu";
+import LegalFooter from "@/components/legal/LegalFooter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -65,6 +66,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         {children}
+        <LegalFooter />
       </section>
     </main>
   );
