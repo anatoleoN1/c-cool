@@ -1,78 +1,31 @@
 "use client";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 const navigation = [
-  { href: "/", label: "Accueil", icon: "⌂" },
-  { href: "/agenda", label: "Agenda", icon: "◷" },
-  { href: "/cours", label: "Cours", icon: "▤" },
-  { href: "/exercices", label: "Exercices", icon: "✓" },
-  { href: "/devoirs", label: "Devoirs", icon: "☑" },
-  { href: "/revisions", label: "Révisions", icon: "↻" },
-  { href: "/evaluations", label: "Évaluations", icon: "◇" },
-  { href: "/calcul-mental", label: "Calcul mental", icon: "∑" },
-  { href: "/classe", label: "Classe", icon: "◎" },
-  { href: "/messages", label: "Messages", icon: "□" },
+  ["/", "Accueil"], ["/agenda", "Agenda"], ["/cours", "Cours"], ["/exercices", "Exercices"],
+  ["/devoirs", "Devoirs"], ["/revisions", "Révisions"], ["/evaluations", "Évaluations"],
+  ["/calcul-mental", "Calcul mental"], ["/classe", "Classe"], ["/messages", "Messages"],
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { role } = useAuth();
-
+  const isActive = (href:string) => href === "/" ? pathname === "/" : pathname.startsWith(href);
   return (
     <aside className="sidebar">
-      <div className="brand">
-        <div className="brand-mark">C</div>
-        <span>C-Cool</span>
-      </div>
-
+      <Link href="/" className="brand" aria-label="C-Cool — accueil"><span className="brand-wordmark">C-Cool</span></Link>
+      <div className="sidebar-label">Espace élève</div>
       <nav className="navigation" aria-label="Navigation principale">
-        {navigation.map((item) => {
-          const active =
-            item.href === "/"
-              ? pathname === "/"
-              : pathname.startsWith(item.href);
-
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`nav-item ${active ? "active" : ""}`}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
+        {navigation.map(([href,label]) => <Link key={href} href={href} className={`nav-item ${isActive(href) ? "active" : ""}`}>{label}</Link>)}
       </nav>
-
       <div className="sidebar-bottom">
-        {role === "admin" ? (
-          <Link
-            href="/admin"
-            className={`nav-item ${pathname.startsWith("/admin") ? "active" : ""}`}
-          >
-            <span className="nav-icon">◆</span>
-            <span>Admin</span>
-          </Link>
-        ) : null}
-        {role === "moderator" || role === "admin" ? (
-          <Link href="/moderation" className={`nav-item ${pathname.startsWith("/moderation") ? "active" : ""}`}>
-            <span className="nav-icon">⚑</span><span>Modération</span>
-          </Link>
-        ) : null}
-        <Link href="/contribuer" className={`nav-item ${pathname.startsWith("/contribuer") ? "active" : ""}`}>
-          <span className="nav-icon">＋</span><span>Contribuer</span>
-        </Link>
-        <Link
-          href="/parametres"
-          className={`nav-item ${pathname.startsWith("/parametres") ? "active" : ""}`}
-        >
-          <span className="nav-icon">⚙</span>
-          <span>Paramètres</span>
-        </Link>
+        <div className="sidebar-label">Autres</div>
+        {role === "admin" ? <Link href="/admin" className={`nav-item ${isActive("/admin") ? "active" : ""}`}>Administration</Link> : null}
+        {role === "moderator" || role === "admin" ? <Link href="/moderation" className={`nav-item ${isActive("/moderation") ? "active" : ""}`}>Modération</Link> : null}
+        <Link href="/contribuer" className={`nav-item ${isActive("/contribuer") ? "active" : ""}`}>Contribuer</Link>
+        <Link href="/parametres" className={`nav-item ${isActive("/parametres") ? "active" : ""}`}>Paramètres</Link>
       </div>
     </aside>
   );
