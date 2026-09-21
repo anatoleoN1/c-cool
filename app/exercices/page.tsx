@@ -6,6 +6,7 @@ import AppShell from "@/components/layout/AppShell";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { ExerciseRepository } from "@/lib/repositories/learning-repository";
 import type { Exercise } from "@/types";
+import PublishedContributionList from "@/components/contributions/PublishedContributionList";
 
 export default function ExercicesPage() {
   const { profile, loading: authLoading } = useAuth();
