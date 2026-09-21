@@ -13,5 +13,5 @@ export default function LegalFooter() {
       </div>
       <p className="mt-2">© {new Date().getFullYear()} C-Cool · Informations légales à jour au {new Date().toLocaleDateString("fr-FR")}.</p>
     </footer>
-  ) as React.ReactElement;
+  );
 }
