@@ -16,7 +16,7 @@ export default function ConfidentialitePage() {
           title: "1. Responsable du traitement",
           children: (
             <>
-              <p><strong>Responsable du traitement :</strong> [À COMPLÉTER — identité juridique exacte et, le cas échéant, structure ou responsable légal à retenir]</p>
+              <p><strong>Responsable du traitement :</strong> Anatole OERLEMANS </p>
               <p><strong>Contact vie privée / données :</strong> redtrap.off@gmail.com (à confirmer comme adresse officielle de contact)</p>
               <p><strong>DPO :</strong> Aucun DPO n’est actuellement désigné pour C-Cool. La nécessité d’une désignation doit être vérifiée selon le cadre juridique et le rôle retenu pour le projet.</p>
             </>
