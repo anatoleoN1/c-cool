@@ -97,6 +97,7 @@ export default function AgendaPage() {
             </article>
           ))}
         </section>
+        <PublishedContributionList schoolId={profile?.activeSchoolIds[0]} kinds={["schedule_change"]} title="Modifications proposées par la classe" />
       </div>
     </AppShell>
   );
