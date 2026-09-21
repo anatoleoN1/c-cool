@@ -58,13 +58,18 @@ export default function AdminPage() {
     if (!schoolId || role !== "admin") return;
 
     try {
-      await new ContributionRepository(schoolId).update(item.id, {
-        status,
-        reviewedAt: new Date().toISOString(),
-        reviewedBy: profile?.id || "",
-        updatedAt: new Date().toISOString(),
-        updatedBy: profile?.id || "",
-      });
+      const reviewerId = profile?.id || "";
+      if (status === "approved") {
+        await new ContributionRepository(schoolId).approve(item, reviewerId);
+      } else {
+        await new ContributionRepository(schoolId).update(item.id, {
+          status,
+          reviewedAt: new Date().toISOString(),
+          reviewedBy: reviewerId,
+          updatedAt: new Date().toISOString(),
+          updatedBy: reviewerId,
+        });
+      }
       setItems((current) => current.filter((candidate) => candidate.id !== item.id));
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "La modification a échoué.");
