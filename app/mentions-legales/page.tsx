@@ -15,10 +15,10 @@ export default function MentionsLegalesPage() {
           title: "Éditeur du site",
           children: (
             <>
-              <p><strong>Nom / dénomination :</strong> [À COMPLÉTER — nom et prénom de l’éditeur ou dénomination de la structure]</p>
-              <p><strong>Statut / forme juridique :</strong> [À COMPLÉTER — particulier, association, entreprise individuelle, société, etc.]</p>
+              <p><strong>Nom / dénomination :</strong> OERLEMANS Anatole</p>
+              <p><strong>Statut / forme juridique :</strong> Projet personnel</p>
               <p><strong>Adresse :</strong> [À COMPLÉTER — adresse légalement requise, selon le statut de l’éditeur]</p>
-              <p><strong>E-mail :</strong> [À COMPLÉTER]</p>
+              <p><strong>E-mail :</strong> redtrap.off@gmail.com (provisoire)</p>
               <p><strong>Téléphone :</strong> [À COMPLÉTER si applicable]</p>
               <p><strong>Responsable de la publication :</strong> [À COMPLÉTER]</p>
             </>
@@ -57,7 +57,7 @@ export default function MentionsLegalesPage() {
         {
           title: "Contact",
           children: (
-            <p>Pour toute question relative au site, contactez : <strong>[À COMPLÉTER — adresse e-mail de contact]</strong>.</p>
+            <p>Pour toute question relative au site, contactez : <strong>redtrap.off@gmail.com (provisoire)</strong>.</p>
           ),
         },
       ]}
