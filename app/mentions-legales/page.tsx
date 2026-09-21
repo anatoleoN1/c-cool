@@ -40,7 +40,7 @@ export default function MentionsLegalesPage() {
           children: (
             <>
               <p>Le nom, le logo, l’interface, les textes, le code et les autres éléments créés spécifiquement pour C-Cool sont protégés par les règles applicables à la propriété intellectuelle, sous réserve des droits détenus par des tiers.</p>
-              <p><strong>Titulaires des droits / licence du code :</strong> [À COMPLÉTER — notamment si le dépôt GitHub est public ou sous licence open source]</p>
+              <p><strong>Titulaires des droits / licence du code :</strong> Le dépôt GitHub public de C-Cool ne publie actuellement aucune licence open source. Les droits sur les éléments créés pour C-Cool restent donc à déterminer selon leur auteur et le cadre juridique retenu pour le projet.</p>
               <p>Les contenus scolaires provenant d’un établissement ou de services tiers restent soumis aux droits qui leur sont applicables. C-Cool ne revendique pas la propriété de ces contenus.</p>
             </>
           ),
