@@ -16,7 +16,7 @@ export default function ConfidentialitePage() {
           children: (
             <>
               <p><strong>Responsable du traitement :</strong> [À COMPLÉTER — identité juridique exacte]</p>
-              <p><strong>Contact vie privée / données :</strong> [À COMPLÉTER — e-mail]</p>
+              <p><strong>Contact vie privée / données :</strong> redtrap.off@gmail.com (provisoire) </p>
               <p><strong>DPO :</strong> [À COMPLÉTER — nom/contact si un DPO est désigné ou si un DPO est concerné par le dispositif retenu]</p>
             </>
           ),
@@ -114,7 +114,7 @@ export default function ConfidentialitePage() {
           children: (
             <>
               <p>Selon le traitement concerné et les conditions prévues par le RGPD, les personnes peuvent disposer de droits d’accès, de rectification, d’effacement, de limitation, d’opposition et, lorsque les conditions sont réunies, de portabilité, ainsi que du droit de retirer un consentement lorsqu’un traitement repose sur celui-ci.</p>
-              <p>Pour exercer un droit : <strong>[À COMPLÉTER — adresse e-mail / procédure]</strong>.</p>
+              <p>Pour exercer un droit : <strong>redtrap.off@gmail.com (provisoire)</strong>.</p>
               <p>Une réclamation peut également être adressée à la <a href="https://www.cnil.fr/" className="underline">CNIL</a>, autorité française de protection des données.</p>
             </>
           ),
