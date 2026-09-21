@@ -69,6 +69,8 @@ export default function ClassePage() {
           </div>
         </section>
 
+        <PublishedContributionList schoolId={schoolId} kinds={["other", "method"]} title="Partages de la classe" />
+
         <section className="section class-rules">
           <p className="section-label">Esprit du groupe</p>
           <h2>Simple, utile, respectueux.</h2>
