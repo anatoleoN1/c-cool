@@ -53,6 +53,7 @@ export default function DevoirsPage() {
             </div>
           ))}
         </section>
+        <PublishedContributionList schoolId={profile?.activeSchoolIds[0]} kinds={["homework"]} title="Devoirs proposés par la classe" />
       </div>
     </AppShell>
   );
