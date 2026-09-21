@@ -1,5 +1,6 @@
 "use client";
 
+import LegalFooter from "@/components/legal/LegalFooter";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,7 @@ export default function IndisponiblePage() {
           <div className="brand-mark">C</div>
           <span>C-Cool</span>
         </div>
+
         <p className="section-label">Accès limité</p>
         <h1>C-Cool n’est pas encore disponible pour ce compte.</h1>
         <p className="auth-intro">
@@ -34,10 +36,13 @@ export default function IndisponiblePage() {
           Ton compte École Directe a bien été identifié, mais il ne correspond
           pas à la classe autorisée.
         </p>
+
         <button className="auth-submit" type="button" onClick={() => void handleSignOut()}>
           Se déconnecter
         </button>
       </section>
+
+      <LegalFooter compact />
     </main>
   );
 }
